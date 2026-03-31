@@ -1,0 +1,45 @@
+# --- IDE Files ---
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+bin/
+
+# --- Build Folders (Crucial) ---
+# This ignores the 'target' folder in every microservice
+**/target/
+**/build/
+out/
+
+# --- Maven / Gradle ---
+.mvn/
+mvnw
+mvnw.cmd
+.gradle/
+gradlew
+gradlew.cmd
+
+# --- Logs & OS Files ---
+*.log
+.DS_Store
+Thumbs.db
+temp/
+
+# --- Environment & Security (Don't leak your DB passwords!) ---
+.env
+.env.local
+*.jks
+*.p12
+*.pem
+
+# --- Frontend (React) ---
+# Add this now so you are ready when you create the frontend folder
+**/node_modules/
+**/dist/
+**/build/
+.eslintcache
+npm-debug.log*
