@@ -54,7 +54,7 @@ public class AuthServiceImpl implements AuthService{
             organizationRepository.save(organization);
             saveUser(request, organization, Role.USER);
 
-            return "Successfully created organization"+ organization.getName();
+            return "Successfully created organization "+ organization.getName();
         }
     }
 
