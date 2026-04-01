@@ -60,7 +60,17 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     public String login(LoginRequest request) {
-        return "";
+        if(!userRepository.existsUserByUsername(request.getUsername())) {
+            return "Wrong username or password";
+        }
+        else{
+            User user = userRepository.findUserByUsername(request.getUsername());
+            if(user.getPassword()!=request.getPassword()){
+                return "Wrong username or password";
+            }
+            else
+                return "User successfully logged in";
+        }
     }
 
     private void saveUser(RegisterRequest request, Organization org, Role role){
