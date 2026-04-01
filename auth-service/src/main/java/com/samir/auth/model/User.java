@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -16,6 +18,9 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column(nullable = false, unique = true)
+    private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = false, unique = true)
     private String username;
