@@ -10,6 +10,7 @@ import com.samir.auth.repository.UserRepository;
 import com.samir.auth.util.InviteCodeGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import static com.samir.auth.util.InviteCodeGenerator.generate;
@@ -20,6 +21,7 @@ public class AuthServiceImpl implements AuthService{
 
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -77,7 +79,7 @@ public class AuthServiceImpl implements AuthService{
         User user = new User();
         user.setEmail(request.getEmail());
         user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setOrganization(org);
         user.setRole(role);
         userRepository.save(user);
