@@ -27,7 +27,15 @@ public class UserServiceImpl {
         return userRepository.findUserByUuid(uuid)
                 .map(user -> new UserResponse(user.getUuid(), user.getUsername(), user.getEmail(), user.getOrganization().getName(), user.getRole()))
                 .orElseThrow(() ->
-                        new UserNotFoundException("User with uuid " + uuid + " was not found")
+                        new UserNotFoundException(uuid)
                 );
     }
+
+    public void delUserByUUID(UUID uuid){
+        if(!userRepository.existsUserByUuid((uuid))){
+            throw new UserNotFoundException(uuid);
+        }
+        userRepository.deleteUserByUuid(uuid);
+    }
+
 }
