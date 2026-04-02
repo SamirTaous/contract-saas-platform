@@ -3,6 +3,7 @@ package com.samir.auth.controller;
 
 import com.samir.auth.dto.UserResponse;
 import com.samir.auth.model.User;
+import com.samir.auth.service.UserService;
 import com.samir.auth.service.UserServiceImpl;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -18,23 +19,23 @@ import java.util.UUID;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserServiceImpl userServiceImpl;
+    private final UserService userService;
 
     @GetMapping("/all")
     ResponseEntity<List<UserResponse>> getAllUsers(){
-        List<UserResponse> users = userServiceImpl.getAllUsers();
+        List<UserResponse> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{uuid}")
     ResponseEntity<UserResponse> getUserByUUID(@PathVariable UUID uuid){
-        UserResponse user = userServiceImpl.getUserByUUID(uuid);
+        UserResponse user = userService.getUserByUUID(uuid);
         return ResponseEntity.ok(user);
     }
 
     @DeleteMapping("/{uuid}")
     ResponseEntity<Void> removeUserByUUID(@PathVariable UUID uuid){
-        userServiceImpl.delUserByUUID(uuid);
+        userService.deleteByUUID(uuid);
         return ResponseEntity.noContent().build();
     }
 

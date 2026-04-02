@@ -5,6 +5,7 @@ import com.samir.auth.exception.UserNotFoundException;
 import com.samir.auth.model.User;
 import com.samir.auth.repository.OrganizationRepository;
 import com.samir.auth.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl {
+public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     public List<UserResponse> getAllUsers() {
@@ -31,11 +32,12 @@ public class UserServiceImpl {
                 );
     }
 
-    public void delUserByUUID(UUID uuid){
+    @Transactional
+    public void deleteByUUID(UUID uuid){
         if(!userRepository.existsUserByUuid((uuid))){
             throw new UserNotFoundException(uuid);
         }
-        userRepository.deleteUserByUuid(uuid);
+        userRepository.deleteByUuid(uuid);
     }
 
 }
