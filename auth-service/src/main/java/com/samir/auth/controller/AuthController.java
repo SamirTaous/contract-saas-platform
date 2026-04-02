@@ -18,24 +18,18 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    ResponseEntity<String> register(@RequestBody RegisterRequest request){
-        try{
+    ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+        try {
             String result = authService.register(request);
             return ResponseEntity.ok(result);
-        }
-        catch (RuntimeException e){
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PostMapping("/login")
-    ResponseEntity<String> login(@RequestBody LoginRequest request){
-        try{
-            String result = authService.login(request);
-            return ResponseEntity.ok(result);
-        }
-        catch(RuntimeException e){
-            return ResponseEntity.status(401).body(e.getMessage());
-        }
+    ResponseEntity<String> login(@RequestBody LoginRequest request) {
+        String token = authService.login(request);
+        return ResponseEntity.ok(token);
     }
 }

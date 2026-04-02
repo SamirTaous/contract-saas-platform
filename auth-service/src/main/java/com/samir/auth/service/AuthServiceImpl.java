@@ -2,12 +2,14 @@ package com.samir.auth.service;
 
 import com.samir.auth.dto.LoginRequest;
 import com.samir.auth.dto.RegisterRequest;
+import com.samir.auth.exception.InvalidCredentialsException;
 import com.samir.auth.model.Organization;
 import com.samir.auth.model.Role;
 import com.samir.auth.model.User;
 import com.samir.auth.repository.OrganizationRepository;
 import com.samir.auth.repository.UserRepository;
 import com.samir.auth.util.InviteCodeGenerator;
+import com.samir.auth.util.JwtUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,7 @@ public class AuthServiceImpl implements AuthService{
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtils jwtUtils;
 
     @Override
     @Transactional
@@ -62,17 +65,14 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     public String login(LoginRequest request) {
-        if(!userRepository.existsUserByUsername(request.getUsername())) {
-            return "Wrong username or password";
+        User user = userRepository.findUserByUsername(request.getUsername())
+                .orElseThrow(() -> new InvalidCredentialsException());
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException();
         }
-        else{
-            User user = userRepository.findUserByUsername(request.getUsername());
-            if(user.getPassword()!=request.getPassword()){
-                return "Wrong username or password";
-            }
-            else
-                return "User successfully logged in";
-        }
+
+        return jwtUtils.generateToken(user);
     }
 
     private void saveUser(RegisterRequest request, Organization org, Role role){
