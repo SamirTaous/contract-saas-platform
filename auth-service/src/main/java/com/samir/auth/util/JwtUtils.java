@@ -1,6 +1,7 @@
 package com.samir.auth.util;
 
 import com.samir.auth.model.User;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -11,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 @Component
 public class JwtUtils {
@@ -37,5 +39,30 @@ public class JwtUtils {
                 // 3. Use the SecretKey object directly
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+
+    // Extract the username (Subject)
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    // Generic method to extract any claim (Role, Org, etc.)
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claimsResolver.apply(claims);
+    }
+
+    // Check if token is still valid
+    public boolean isTokenValid(String token) {
+        try {
+            return !extractClaim(token, Claims::getExpiration).before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

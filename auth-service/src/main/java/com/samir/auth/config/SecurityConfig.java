@@ -1,17 +1,23 @@
 package com.samir.auth.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor // Automatically injects the jwtAuthFilter
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -21,16 +27,26 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Disable CSRF (Cross-Site Request Forgery)
-                // This is required for Postman to send POST requests
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // 2. Allow ALL requests to every URL for now
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+                // 1. Make the session STATELESS (We use JWT, not Cookies/Sessions)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // 3. Disable the default Login Form
+                // 2. Define the "Lock" rules
+                .authorizeHttpRequests(auth -> auth
+                        // Public endpoints (No token needed)
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // Protected endpoints (Token REQUIRED)
+                        .anyRequest().authenticated()
+                )
+
+                // 3. Add our Custom JWT Filter BEFORE the standard Spring Login filter
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+
+                // 4. Disable the default Login Form
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable);
 
