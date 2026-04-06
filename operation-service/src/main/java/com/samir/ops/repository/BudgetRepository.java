@@ -15,4 +15,6 @@ public interface BudgetRepository extends JpaRepository<BudgetLine, Long> {
     List<BudgetLine> findBudgetLinesByOrganizationId(Long organizationId);
     Optional<BudgetLine> findBudgetLineByFullCode(String fullCode, Long organizationId);
     Optional<BudgetLine> findBudgetLineByUuid(UUID uuid);
+
+    Optional<BudgetLine> findByFullCodeAndOrganizationId(String fullCode, Long organizationId);
 }
