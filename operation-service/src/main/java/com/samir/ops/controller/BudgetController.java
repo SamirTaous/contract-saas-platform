@@ -1,13 +1,13 @@
 package com.samir.ops.controller;
 
+import com.samir.ops.model.BudgetLine;
 import com.samir.ops.service.BudgetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/budget")
@@ -25,5 +25,11 @@ public class BudgetController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Import failed: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<BudgetLine>> getAllBudgets(){
+        List<BudgetLine> budgets = budgetService.getAllBudgets();
+        return ResponseEntity.ok(budgets);
     }
 }
