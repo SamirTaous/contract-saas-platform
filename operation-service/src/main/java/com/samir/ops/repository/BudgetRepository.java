@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface BudgetLineRepository extends JpaRepository<BudgetLine, Long> {
+public interface BudgetRepository extends JpaRepository<BudgetLine, Long> {
 
     List<BudgetLine> findBudgetLinesByOrganizationId(Long organizationId);
     Optional<BudgetLine> findBudgetLineByFullCode(String fullCode, Long organizationId);
