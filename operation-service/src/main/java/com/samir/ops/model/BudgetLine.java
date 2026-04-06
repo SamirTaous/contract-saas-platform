@@ -39,6 +39,9 @@ public class BudgetLine {
     @Column(nullable = false, unique = true)
     private String fullCode;
 
+    @Column
+    private String label;
+
     @Column(precision = 15, scale = 2)
     private BigDecimal initialAmount;
 
