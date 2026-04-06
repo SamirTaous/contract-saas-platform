@@ -1,5 +1,6 @@
 package com.samir.ops.service;
 
+import com.samir.ops.dto.BudgetFilterDTO;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.model.Type;
 import com.samir.ops.repository.BudgetRepository;
@@ -11,10 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -114,6 +112,46 @@ public class BudgetService {
 
     public List<BudgetLine> getAllBudgets(){
         return budgetRepository.findAll();
+    }
+
+    public BudgetLine getBudgetLineByCode(String fullCode, Long org){
+        return budgetRepository.findByFullCodeAndOrganizationId(fullCode, org)
+                .orElseThrow(
+                        () -> new RuntimeException("Budget Line doesn't exist.")
+                );
+    }
+
+    public List<BudgetLine> getBudgetLineByArticle(String article, Long org){
+        return budgetRepository.findByArticleAndOrganizationId(article, 1L);
+    }
+
+    public List<BudgetLine> filterBudget(BudgetFilterDTO filter, Long orgId) {
+
+        // 1. Case A: Article + Paragraph + Line (The exact 'envelope')
+        if (filter.getArticle() != null && filter.getParagraph() != null && filter.getLine() != null) {
+            return budgetRepository.findByArticleAndParagraphAndLineAndOrganizationId(
+                    filter.getArticle(), filter.getParagraph(), filter.getLine(), orgId);
+        }
+
+        // 2. Case B: Article + Paragraph
+        if (filter.getArticle() != null && filter.getParagraph() != null) {
+            return budgetRepository.findByArticleAndParagraphAndOrganizationId(
+                    filter.getArticle(), filter.getParagraph(), orgId);
+        }
+
+        // 3. Case C: Article only
+        if (filter.getArticle() != null) {
+            return budgetRepository.findByArticleAndOrganizationId(filter.getArticle(), orgId);
+        }
+
+        // 4. Case D: Type only (MDD or INV)
+        // Since filter.getType() is already an Enum, just pass it!
+        if (filter.getType() != null) {
+            return budgetRepository.findByTypeAndOrganizationId(filter.getType(), orgId);
+        }
+
+        // 5. Case E: Error
+        throw new RuntimeException("Please fill at least one of the codes (Article, Paragraph, Line, or Type)");
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.samir.ops.controller;
 
+import com.samir.ops.dto.BudgetFilterDTO;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.service.BudgetService;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +32,20 @@ public class BudgetController {
     public ResponseEntity<List<BudgetLine>> getAllBudgets(){
         List<BudgetLine> budgets = budgetService.getAllBudgets();
         return ResponseEntity.ok(budgets);
+    }
+
+    @GetMapping("{fullcode}")
+    public ResponseEntity<BudgetLine> getBudgetLineByFullCode(@PathVariable String fullcode){
+        return ResponseEntity.ok(budgetService.getBudgetLineByCode(fullcode,1L));
+    }
+
+    @GetMapping("{article}")
+    public ResponseEntity<BudgetLine> getBudgetLineByArticle(@PathVariable String article){
+        return ResponseEntity.ok(budgetService.getBudgetLineByCode(article,1L));
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<List<BudgetLine>> getBudgetsByFilter(@RequestBody BudgetFilterDTO filter){
+        return ResponseEntity.ok(budgetService.filterBudget(filter, 1L));
     }
 }
