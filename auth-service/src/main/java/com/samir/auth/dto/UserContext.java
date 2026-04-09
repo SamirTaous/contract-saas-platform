@@ -3,6 +3,8 @@ package com.samir.auth.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 @Builder
 public class UserContext {

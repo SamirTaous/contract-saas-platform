@@ -92,4 +92,8 @@ public class JwtUtils {
             return false;
         }
     }
+
+    public Long getExpiresIn(){
+        return EXPIRATION_TIME / 1000;
+    }
 }
