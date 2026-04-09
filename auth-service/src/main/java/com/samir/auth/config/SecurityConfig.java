@@ -39,6 +39,8 @@ public class SecurityConfig {
                         // Public endpoints (No token needed)
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // List all users / specific user
+                        .requestMatchers("/api/users/all").hasRole("SUPER_ADMIN")
                         // Protected endpoints (Token REQUIRED)
                         .anyRequest().authenticated()
                 )
