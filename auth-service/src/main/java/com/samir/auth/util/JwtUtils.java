@@ -29,6 +29,7 @@ public class JwtUtils {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole().name());
         claims.put("org", user.getOrganization().getName());
+        claims.put("orgId", user.getOrganization().getId());
         claims.put("userUuid", user.getUuid().toString());
 
         return Jwts.builder()
