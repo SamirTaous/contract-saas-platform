@@ -3,6 +3,7 @@ package com.samir.ops.controller;
 import com.samir.ops.dto.BudgetFilterDTO;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.service.BudgetService;
+import com.samir.ops.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +17,21 @@ import java.util.List;
 public class BudgetController {
 
     private final BudgetService budgetService;
+    private final JwtUtils jwtUtils;
 
     @PostMapping("/import")
-    public ResponseEntity<String> importBudget(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> importBudget(@RequestParam("file") MultipartFile file,
+                                               @RequestHeader("Authorization") String authHeader) {
         try {
-            // hardcoded org id for testing , later we will use the jwt token
-            budgetService.importBudgetExcel(file, 1L);
+
+            // Extract token bearer
+            String token = authHeader.substring(7);
+
+            // Extract Org Id
+            Long orgId= jwtUtils.extractOrgId(token);
+
+            // Pass Org Id to the service
+            budgetService.importBudgetExcel(file, orgId);
             return ResponseEntity.ok("Budget imported successfully!");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Import failed: " + e.getMessage());
