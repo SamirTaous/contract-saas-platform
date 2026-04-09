@@ -1,10 +1,12 @@
 package com.samir.ops.controller;
 
 import com.samir.ops.dto.BudgetFilterDTO;
+import com.samir.ops.dto.UserContext;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.service.BudgetService;
 import com.samir.ops.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,24 +25,18 @@ public class BudgetController {
     public ResponseEntity<String> importBudget(@RequestParam("file") MultipartFile file,
                                                @RequestHeader("Authorization") String authHeader) {
         try {
-
-            // Extract token bearer
-            String token = authHeader.substring(7);
-
-            // Extract Org Id
-            Long orgId= jwtUtils.extractOrgId(token);
-
-            // Pass Org Id to the service
-            budgetService.importBudgetExcel(file, orgId);
-            return ResponseEntity.ok("Budget imported successfully!");
+            UserContext user = jwtUtils.getUserContext(authHeader);
+            budgetService.importBudgetExcel(file, user.getOrgId());
+            return ResponseEntity.ok("Budget imported successfully for "+ user.getOrgName());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Import failed: " + e.getMessage());
         }
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<BudgetLine>> getAllBudgets(){
-        List<BudgetLine> budgets = budgetService.getAllBudgets();
+    public ResponseEntity<List<BudgetLine>> getAllBudgets(@RequestHeader("Authorization") String authHeader){
+        UserContext user = jwtUtils.getUserContext(authHeader);
+        List<BudgetLine> budgets = budgetService.getAllBudgets(user);
         return ResponseEntity.ok(budgets);
     }
 

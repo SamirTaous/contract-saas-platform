@@ -1,6 +1,7 @@
 package com.samir.ops.service;
 
 import com.samir.ops.dto.BudgetFilterDTO;
+import com.samir.ops.dto.UserContext;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.model.Type;
 import com.samir.ops.repository.BudgetRepository;
@@ -115,8 +116,9 @@ public class BudgetService {
         return BigDecimal.ZERO;
     }
 
-    public List<BudgetLine> getAllBudgets(){
-        return budgetRepository.findAll();
+    public List<BudgetLine> getAllBudgets(UserContext user){
+        if(user.getRole()=="SUPER_ADMIN") return budgetRepository.findAll();
+        return budgetRepository.findBudgetLinesByOrganizationId(user.getOrgId());
     }
 
     public BudgetLine getBudgetLineByCode(String fullCode, Long org){

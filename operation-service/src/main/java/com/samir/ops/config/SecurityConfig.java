@@ -29,8 +29,11 @@ public class SecurityConfig {
 
                 // 2. Define authorization rules
                 .authorizeHttpRequests(auth -> auth
+
+
                         // Only ADMINS can import budget files
                         .requestMatchers("/api/budget/import").hasRole("ADMIN")
+                        .requestMatchers("/api/budget/all").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                         // All other API endpoints require a valid login
                         .anyRequest().authenticated()
