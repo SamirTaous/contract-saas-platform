@@ -36,7 +36,7 @@ public class BudgetLine {
     @Column(nullable = false)
     private String line;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String fullCode;
 
     @Column
