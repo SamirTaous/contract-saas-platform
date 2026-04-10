@@ -20,6 +20,8 @@ public interface BudgetRepository extends JpaRepository<BudgetLine, Long> {
     List<BudgetLine> findByArticleAndOrganizationId(String article, Long organizationId);
     List<BudgetLine> findByTypeAndOrganizationId(Type type, Long orgId);
 
+    Boolean existsBudgetLinesByOrganizationIdAndFullCode(Long organizationId, String fullCode);
+
     List<BudgetLine> findByArticleAndParagraphAndOrganizationId(String article, String paragraph, Long orgId);
 
     List<BudgetLine> findByArticleAndParagraphAndLineAndOrganizationId(String article, String paragraph, String line, Long orgId);

@@ -10,7 +10,9 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
-@Table(name = "budget_lines")
+@Table(name = "budget_lines", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"full_code", "organization_id"})
+})
 @Getter
 @Setter
 @AllArgsConstructor

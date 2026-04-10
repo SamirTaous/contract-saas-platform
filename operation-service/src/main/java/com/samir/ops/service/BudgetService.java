@@ -24,20 +24,23 @@ public class BudgetService {
 
     /**
      * Imports budget lines from an Excel file.
-     * Uses a Map to prevent duplicate key errors if the same code appears multiple times in the file.
+     * Implements Upsert (Update or Insert) and accumulation logic.
      */
     @Transactional
     public void importBudgetExcel(MultipartFile file, Long organizationId) throws Exception {
         Workbook workbook = WorkbookFactory.create(file.getInputStream());
         Sheet sheet = workbook.getSheetAt(0);
 
+        // Track lines processed in this specific file to handle internal duplicates
         Map<String, BudgetLine> processedLines = new HashMap<>();
 
+        // Start from row 3 (Index 2)
         for (int i = 2; i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
             if (row == null) continue;
 
             String typeStr = getCellValueAsString(row.getCell(0)).trim();
+            // Skip headers, empty rows, and separators
             if (typeStr.isEmpty() || typeStr.contains("-") || typeStr.equalsIgnoreCase("WSAZ")) continue;
 
             try {
@@ -46,30 +49,30 @@ public class BudgetService {
                 String lineNo = getCellValueAsString(row.getCell(4));
                 String fullCode = String.join(".", typeStr.toUpperCase(), article, paragraph, lineNo);
 
-                // Read amount and label
+                // Extract Amount and Label based on your latest index (7 and 8)
                 BigDecimal amountValue = extractNumericValue(row.getCell(7), i);
                 String rowLabel = getCellValueAsString(row.getCell(8));
 
                 BudgetLine budgetLine;
 
-                // UPSERT & ACCUMULATION LOGIC
+                // 1. Check if we already handled this code in this specific loop
                 if (processedLines.containsKey(fullCode)) {
                     budgetLine = processedLines.get(fullCode);
-                    // ADD the amount instead of overwriting, in case budget is split across rows
+                    // Add amounts together if code repeats in same file
                     budgetLine.setInitialAmount(budgetLine.getInitialAmount().add(amountValue));
-                    // Append label if it's new information
                     if (!rowLabel.isEmpty()) budgetLine.setLabel(budgetLine.getLabel() + " | " + rowLabel);
-                    log.info("Accumulated amount for duplicate code in Excel: {}", fullCode);
                 }
                 else {
+                    // 2. Check if it exists in the Database from previous imports
                     Optional<BudgetLine> dbLine = budgetRepository.findByFullCodeAndOrganizationId(fullCode, organizationId);
 
                     if (dbLine.isPresent()) {
                         budgetLine = dbLine.get();
-                        budgetLine.setInitialAmount(amountValue);
+                        budgetLine.setInitialAmount(amountValue); // Overwrite with newest state
                         budgetLine.setLabel(rowLabel);
-                        log.info("Updating existing DB record: {}", fullCode);
+                        log.info("Updating existing record: {}", fullCode);
                     } else {
+                        // 3. Create brand new line
                         budgetLine = new BudgetLine();
                         budgetLine.setType(Type.valueOf(typeStr.toUpperCase()));
                         budgetLine.setArticle(article);
@@ -90,17 +93,63 @@ public class BudgetService {
 
         if (!processedLines.isEmpty()) {
             budgetRepository.saveAll(processedLines.values());
-            log.info("Import complete. Processed {} unique lines.", processedLines.size());
+            log.info("Import complete. Processed {} unique budget lines.", processedLines.size());
         }
         workbook.close();
     }
 
     /**
-     * Robust helper to get numbers even if the cell is formatted as String or has noise
+     * Logic for fetching budgets based on user role.
+     */
+    public List<BudgetLine> getAllBudgets(UserContext user) {
+        // FIXED: Use .equals() for String comparison, never ==
+        if ("SUPER_ADMIN".equals(user.getRole())) {
+            return budgetRepository.findAll();
+        }
+        return budgetRepository.findBudgetLinesByOrganizationId(user.getOrgId());
+    }
+
+    /**
+     * Filters the budget using hierarchical priority.
+     */
+    public List<BudgetLine> filterBudget(BudgetFilterDTO filter, Long orgId) {
+        // Hierarchy: Line > Paragraph > Article > Type
+        if (filter.getLine() != null && filter.getParagraph() != null && filter.getArticle() != null) {
+            return budgetRepository.findByArticleAndParagraphAndLineAndOrganizationId(
+                    filter.getArticle(), filter.getParagraph(), filter.getLine(), orgId);
+        }
+
+        if (filter.getParagraph() != null && filter.getArticle() != null) {
+            return budgetRepository.findByArticleAndParagraphAndOrganizationId(
+                    filter.getArticle(), filter.getParagraph(), orgId);
+        }
+
+        if (filter.getArticle() != null) {
+            return budgetRepository.findByArticleAndOrganizationId(filter.getArticle(), orgId);
+        }
+
+        if (filter.getType() != null) {
+            return budgetRepository.findByTypeAndOrganizationId(filter.getType(), orgId);
+        }
+
+        throw new RuntimeException("Please fill at least one of the codes (Article, Paragraph, Line, or Type)");
+    }
+
+    public BudgetLine getBudgetLineByCode(String fullCode, Long org) {
+        return budgetRepository.findByFullCodeAndOrganizationId(fullCode, org)
+                .orElseThrow(() -> new RuntimeException("Budget Line " + fullCode + " doesn't exist for your org."));
+    }
+
+    public List<BudgetLine> getBudgetLineByArticle(String article, Long org) {
+        // FIXED: Use passed orgId instead of 1L
+        return budgetRepository.findByArticleAndOrganizationId(article, org);
+    }
+
+    /**
+     * Robust helper to get numbers from Excel cells.
      */
     private BigDecimal extractNumericValue(Cell cell, int rowIdx) {
         if (cell == null) return BigDecimal.ZERO;
-
         try {
             if (cell.getCellType() == CellType.NUMERIC) {
                 return BigDecimal.valueOf(cell.getNumericCellValue());
@@ -111,81 +160,26 @@ public class BudgetService {
                 return BigDecimal.valueOf(cell.getNumericCellValue());
             }
         } catch (Exception e) {
-            log.warn("Row {}: Could not extract number from cell. Value ignored.", rowIdx + 1);
+            log.warn("Row {}: Could not extract number. Defaulting to 0.", rowIdx + 1);
         }
         return BigDecimal.ZERO;
     }
 
-    public List<BudgetLine> getAllBudgets(UserContext user){
-        if(user.getRole()=="SUPER_ADMIN") return budgetRepository.findAll();
-        return budgetRepository.findBudgetLinesByOrganizationId(user.getOrgId());
-    }
-
-    public BudgetLine getBudgetLineByCode(String fullCode, Long org){
-        return budgetRepository.findByFullCodeAndOrganizationId(fullCode, org)
-                .orElseThrow(
-                        () -> new RuntimeException("Budget Line doesn't exist.")
-                );
-    }
-
-    public List<BudgetLine> getBudgetLineByArticle(String article, Long org){
-        return budgetRepository.findByArticleAndOrganizationId(article, 1L);
-    }
-
-    public List<BudgetLine> filterBudget(BudgetFilterDTO filter, Long orgId) {
-
-        // 1. Case A: Article + Paragraph + Line (The exact 'envelope')
-        if (filter.getArticle() != null && filter.getParagraph() != null && filter.getLine() != null) {
-            return budgetRepository.findByArticleAndParagraphAndLineAndOrganizationId(
-                    filter.getArticle(), filter.getParagraph(), filter.getLine(), orgId);
-        }
-
-        // 2. Case B: Article + Paragraph
-        if (filter.getArticle() != null && filter.getParagraph() != null) {
-            return budgetRepository.findByArticleAndParagraphAndOrganizationId(
-                    filter.getArticle(), filter.getParagraph(), orgId);
-        }
-
-        // 3. Case C: Article only
-        if (filter.getArticle() != null) {
-            return budgetRepository.findByArticleAndOrganizationId(filter.getArticle(), orgId);
-        }
-
-        // 4. Case D: Type only (MDD or INV)
-        // Since filter.getType() is already an Enum, just pass it!
-        if (filter.getType() != null) {
-            return budgetRepository.findByTypeAndOrganizationId(filter.getType(), orgId);
-        }
-
-        // 5. Case E: Error
-        throw new RuntimeException("Please fill at least one of the codes (Article, Paragraph, Line, or Type)");
-    }
-
     /**
-     * Helper to read cells safely and preserve leading zeros/formatting.
+     * Helper to read cells as String regardless of Excel format.
      */
     private String getCellValueAsString(Cell cell) {
         if (cell == null) return "";
-
         switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue().trim();
+            case STRING: return cell.getStringCellValue().trim();
             case NUMERIC:
                 double val = cell.getNumericCellValue();
-                // If the number is whole (e.g. 901.0), return as "901"
-                if (val == (long) val) {
-                    return String.format("%d", (long) val);
-                } else {
-                    return String.valueOf(val);
-                }
+                if (val == (long) val) return String.format("%d", (long) val);
+                return String.valueOf(val);
             case FORMULA:
-                try {
-                    return cell.getStringCellValue();
-                } catch (Exception e) {
-                    return String.valueOf(cell.getNumericCellValue());
-                }
-            default:
-                return "";
+                try { return cell.getStringCellValue(); }
+                catch (Exception e) { return String.valueOf(cell.getNumericCellValue()); }
+            default: return "";
         }
     }
 }
