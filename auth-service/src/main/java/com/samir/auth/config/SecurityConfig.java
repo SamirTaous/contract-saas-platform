@@ -40,7 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
 
                         // List all users / specific user
-                        .requestMatchers("/api/users/all").hasAnyRole("ADMIN","SUPER_ADMIN")
+                        .requestMatchers("/api/users/all").authenticated()
                         // Protected endpoints (Token REQUIRED)
                         .anyRequest().authenticated()
                 )

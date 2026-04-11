@@ -17,12 +17,14 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
-    public List<UserResponse> getAllUsers(UserContext currUser) {
-        if(currUser.getRole().equals("SUPER_ADMIN"))
+    public List<UserResponse> getAllUsers(UserContext userContext) {
+        if(userContext.getRole().equals("SUPER_ADMIN"))
             return userRepository.findAll().stream()
                     .map(user -> new UserResponse(user.getUuid(), user.getUsername(), user.getEmail(), user.getOrganization().getName(), user.getRole()))
                     .toList();
-        return userRepository.findAllByOrganizationId(currUser.getOrgId());
+        return userRepository.findUsersByOrganization_Id(userContext.getOrgId()).stream()
+                .map(user -> new UserResponse(user.getUuid(), user.getUsername(), user.getEmail(), user.getOrganization().getName(), user.getRole()))
+                .toList();
     }
 
     public UserResponse getUserByUUID(UserContext userContext, UUID uuid){

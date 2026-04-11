@@ -1,6 +1,7 @@
 package com.samir.auth.repository;
 
 import com.samir.auth.dto.UserResponse;
+import com.samir.auth.model.Organization;
 import com.samir.auth.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -22,5 +23,6 @@ public interface UserRepository extends JpaRepository <User, Long> {
 
     boolean existsUserByUuid(UUID uuid);
 
-    List<UserResponse> findAllByOrganizationId(long organizationId);
+    List<User> findUsersByOrganization_Id(long organizationId);
+
 }
