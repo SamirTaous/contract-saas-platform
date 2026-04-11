@@ -1,10 +1,12 @@
 package com.samir.auth.controller;
 
 
+import com.samir.auth.dto.UserContext;
 import com.samir.auth.dto.UserResponse;
 import com.samir.auth.model.User;
 import com.samir.auth.service.UserService;
 import com.samir.auth.service.UserServiceImpl;
+import com.samir.auth.util.JwtUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.RequestEntity;
@@ -20,22 +22,26 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final JwtUtils jwtUtils;
 
     @GetMapping("/all")
-    ResponseEntity<List<UserResponse>> getAllUsers(){
-        List<UserResponse> users = userService.getAllUsers();
+    ResponseEntity<List<UserResponse>> getAllUsers(@RequestHeader("Authorization") String authHeader){
+        UserContext user = jwtUtils.getUserContext(authHeader);
+        List<UserResponse> users = userService.getAllUsers(user);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{uuid}")
-    ResponseEntity<UserResponse> getUserByUUID(@PathVariable UUID uuid){
-        UserResponse user = userService.getUserByUUID(uuid);
+    ResponseEntity<UserResponse> getUserByUUID(@RequestHeader("Authorization") String authHeader, @PathVariable UUID uuid){
+        UserContext userContext = jwtUtils.getUserContext(authHeader);
+        UserResponse user = userService.getUserByUUID(userContext, uuid);
         return ResponseEntity.ok(user);
     }
 
     @DeleteMapping("/{uuid}")
-    ResponseEntity<Void> removeUserByUUID(@PathVariable UUID uuid){
-        userService.deleteByUUID(uuid);
+    ResponseEntity<Void> removeUserByUUID(@RequestHeader("Authorization") String authHeader, @PathVariable UUID uuid){
+        UserContext userContext = jwtUtils.getUserContext(authHeader);
+        userService.deleteByUUID(userContext, uuid);
         return ResponseEntity.noContent().build();
     }
 
