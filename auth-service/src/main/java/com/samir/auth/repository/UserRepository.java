@@ -25,4 +25,6 @@ public interface UserRepository extends JpaRepository <User, Long> {
 
     List<User> findUsersByOrganization_Id(long organizationId);
 
+    Long countUsersByOrganization_Id(long organizationId);
+
 }
