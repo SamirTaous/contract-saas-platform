@@ -1,5 +1,6 @@
 package com.samir.auth.repository;
 
+import com.samir.auth.dto.OrganizationResponse;
 import com.samir.auth.model.Organization;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -13,4 +14,6 @@ public interface OrganizationRepository extends JpaRepository <Organization,Long
     boolean existsOrganizationByInviteCode(String inviteCode);
 
     Optional<Organization> findOrganizationByInviteCode(String inviteCode);
+
+    Optional<Organization> findOrganizationById(long id);
 }
