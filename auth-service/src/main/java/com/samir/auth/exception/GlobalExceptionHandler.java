@@ -33,6 +33,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 
+    // Specific handler for Not Empty Organization
+    @ExceptionHandler(OrganizationNotEmptyException.class)
+    public ResponseEntity<String> handleNotEmptyException(OrganizationNotEmptyException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
     // "Safety Net" for any other unexpected error
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleAll(Exception ex) {
