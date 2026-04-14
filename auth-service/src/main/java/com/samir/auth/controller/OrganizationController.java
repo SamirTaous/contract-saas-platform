@@ -8,10 +8,10 @@ import com.samir.auth.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,8 +23,23 @@ public class OrganizationController {
 
     @GetMapping("/me")
     public ResponseEntity<OrganizationResponse> myOrganization(@RequestHeader("Authorization") String authHeader){
-        UserContext userContext = jwtUtils.getUserContext(authHeader);
-        return ResponseEntity.ok(organizationService.findMyOrganization(userContext));
+        return ResponseEntity.ok(organizationService.findMyOrganization(getUserContext(authHeader)));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<OrganizationResponse>> listAllOrganizations(@RequestHeader("Authorization") String authHeader){
+        return ResponseEntity.ok(organizationService.findAllOrganizations(getUserContext(authHeader)));
+    }
+
+    @DeleteMapping("/{uuid}")
+    public ResponseEntity<Void> removeOrganization(@RequestHeader("Authorization") String authHeader, @PathVariable UUID uuid){
+        organizationService.deleteOrganization(getUserContext(authHeader), uuid);
+        return ResponseEntity.noContent().build();
+    }
+
+    // helper functions
+    private UserContext getUserContext(String authHeader){
+        return jwtUtils.getUserContext(authHeader);
     }
 
 }
