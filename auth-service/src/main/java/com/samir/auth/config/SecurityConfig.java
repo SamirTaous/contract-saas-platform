@@ -41,6 +41,11 @@ public class SecurityConfig {
 
                         // List all users / specific user
                         .requestMatchers("/api/users/all").authenticated()
+
+                        // List my organization ( admins only )
+                        .requestMatchers("/api/organizations/me").hasAnyRole("ADMIN","SUPER_ADMIN")
+                        .requestMatchers("/api/organizations/all").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/api/organizations/{uuid}").hasRole("SUPER_ADMIN")
                         // Protected endpoints (Token REQUIRED)
                         .anyRequest().authenticated()
                 )
