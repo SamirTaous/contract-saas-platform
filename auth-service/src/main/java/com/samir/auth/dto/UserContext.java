@@ -11,6 +11,7 @@ public class UserContext {
     private String username;
     private String role;
     private Long orgId;
+    private String orgUuid;
     private String orgName;
     private String userUuid;
 }

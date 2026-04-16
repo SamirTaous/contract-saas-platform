@@ -38,6 +38,7 @@ public class JwtUtils {
                 .role(claims.get("role", String.class))
                 .orgName(claims.get("org", String.class))
                 .orgId(extractOrgId(token))
+                .orgUuid(claims.get("orgUuid", String.class))
                 .userUuid(claims.get("userUuid", String.class))
                 .build();
     }
@@ -47,6 +48,7 @@ public class JwtUtils {
         claims.put("role", user.getRole().name());
         claims.put("org", user.getOrganization().getName());
         claims.put("orgId", user.getOrganization().getId());
+        claims.put("orgUuid", user.getOrganization().getUuid().toString());
         claims.put("userUuid", user.getUuid().toString());
 
         return Jwts.builder()
