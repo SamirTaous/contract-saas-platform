@@ -31,6 +31,11 @@ public class OrganizationController {
         return ResponseEntity.ok(organizationService.findAllOrganizations(getUserContext(authHeader)));
     }
 
+    @GetMapping("/{uuid}")
+    public ResponseEntity<OrganizationResponse> findOrganization(@RequestHeader("Authorization") String authHeader, @PathVariable UUID uuid){
+        return ResponseEntity.ok(organizationService.findOrganization(getUserContext(authHeader), uuid));
+    }
+
     @DeleteMapping("/{uuid}")
     public ResponseEntity<Void> removeOrganization(@RequestHeader("Authorization") String authHeader, @PathVariable UUID uuid){
         organizationService.deleteOrganization(getUserContext(authHeader), uuid);

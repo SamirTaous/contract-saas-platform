@@ -7,6 +7,7 @@ import com.samir.auth.exception.OrganizationNotEmptyException;
 import com.samir.auth.exception.OrganizationNotFoundException;
 import com.samir.auth.exception.UnauthorizedClientException;
 import com.samir.auth.model.Organization;
+import com.samir.auth.model.User;
 import com.samir.auth.repository.OrganizationRepository;
 import com.samir.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,23 @@ public class OrganizationServiceImpl implements OrganizationService{
                                 .map(user -> new UserResponse(user.getUuid(), user.getUsername(), user.getEmail(), user.getOrganization().getName(), user.getRole()))
                                 .toList()
                 )).toList();
+    }
+
+    @Override
+    public OrganizationResponse findOrganization(UserContext userContext, UUID uuid){
+        if(!userContext.getRole().equals("SUPER_ADMIN"))
+            throw new UnauthorizedClientException(userContext.getUsername());
+        return organizationRepository.findOrganizationByUuid(uuid)
+                .map(org -> new OrganizationResponse(
+                        org.getUuid(),
+                        org.getName(),
+                        org.getInviteCode(),
+                        userRepository.countUsersByOrganization_Id(org.getId()),
+                        userRepository.findUsersByOrganization_Id(userContext.getOrgId()).stream()
+                                .map(user -> new UserResponse(user.getUuid(), user.getUsername(), user.getEmail(), user.getOrganization().getName(), user.getRole()))
+                                .toList()
+                ))
+                .orElseThrow(() -> new OrganizationNotFoundException());
     }
 
     @Override

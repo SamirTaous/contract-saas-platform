@@ -14,4 +14,5 @@ public interface OrganizationService {
 
     public void deleteOrganization(UserContext userContext, UUID uuid);
 
-    }
+    public OrganizationResponse findOrganization(UserContext userContext, UUID uuid);
+}
