@@ -4,6 +4,7 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import Login from './components/Login.jsx'
 import Register from './components/Register.jsx'
+import UserList from './components/UserList.jsx'
 import './App.css'
 
 function App() {
@@ -11,7 +12,7 @@ function App() {
 
   return (
     <>
-      <Login/>
+      <UserList/>
     </>
   )
 }
