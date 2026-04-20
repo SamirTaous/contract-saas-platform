@@ -1,19 +1,31 @@
 import { useState, useEffect } from 'react';
-import api from '../api'; // Your Axios instance
+import { useNavigate } from 'react-router-dom';
+import { Building2, Users, ArrowLeft, Mail, Shield, User } from 'lucide-react';
+import api from '../api';
 
 const UserList = () => {
-    const [users, setUsers] = useState([]); // Our "Bucket" starts empty []
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        const userData = localStorage.getItem('user');
+        
+        if (!token || !userData) {
+            navigate('/auth');
+            return;
+        }
+        
+        setUser(JSON.parse(userData));
         fetchUsers();
-    }, []); // The empty array [] means "only run once"
+    }, [navigate]);
 
     const fetchUsers = async () => {
         try {
-            // This calls your @GetMapping("/api/users/all")
             const res = await api.get('/users/all'); 
-            setUsers(res.data); // Put the Java JSON into the React Bucket
+            setUsers(res.data);
             setLoading(false);
         } catch (err) {
             console.error("Failed to fetch users", err);
@@ -21,20 +33,131 @@ const UserList = () => {
         }
     };
 
-    if (loading) return <p>Loading team members...</p>;
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/auth');
+    };
+
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
-        <div className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Team Members</h2>
-            <div className="grid gap-4">
-                {users.map((user) => (
-                    <div key={user.uuid} className="p-4 bg-white shadow rounded-lg border-l-4 border-blue-500">
-                        <p className="font-bold">{user.username}</p>
-                        <p className="text-gray-600 text-sm">{user.email}</p>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">{user.role}</span>
+        <div className="min-h-screen bg-gray-50">
+            {/* Header */}
+            <header className="bg-white shadow-sm border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center space-x-4">
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                            >
+                                <ArrowLeft className="h-5 w-5" />
+                            </button>
+                            <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                                    <Building2 className="w-5 h-5 text-white" />
+                                </div>
+                                <span className="text-xl font-bold text-gray-900">ContractSaaS</span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-3">
+                                <div className="text-right">
+                                    <p className="text-sm font-medium text-gray-900">{user.username}</p>
+                                    <p className="text-xs text-gray-500">Administrator</p>
+                                </div>
+                                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer">
+                                    <span className="text-white text-sm font-medium">
+                                        {user.username.charAt(0).toUpperCase()}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                ))}
-            </div>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="mb-8">
+                    <div className="flex items-center space-x-3 mb-4">
+                        <Users className="h-8 w-8 text-blue-600" />
+                        <h1 className="text-3xl font-bold text-gray-900">Team Members</h1>
+                    </div>
+                    <p className="text-gray-600">
+                        Manage your organization's team members and their roles.
+                    </p>
+                </div>
+
+                {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                All Members ({users.length})
+                            </h2>
+                        </div>
+                        
+                        {users.length === 0 ? (
+                            <div className="text-center py-12">
+                                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">No team members found</h3>
+                                <p className="text-gray-600">Start by inviting team members to your organization.</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-gray-200">
+                                {users.map((member) => (
+                                    <div key={member.uuid} className="px-6 py-4 hover:bg-gray-50 transition-all duration-200 hover:shadow-sm">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center hover:from-blue-600 hover:to-blue-700 transition-all duration-200 cursor-pointer">
+                                                    <span className="text-white text-lg font-semibold">
+                                                        {member.username.charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                                                        <span>{member.username}</span>
+                                                    </h3>
+                                                    <div className="flex items-center space-x-4 mt-1">
+                                                        <div className="flex items-center space-x-1 text-gray-600">
+                                                            <Mail className="h-4 w-4" />
+                                                            <span className="text-sm">{member.email}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center space-x-3">
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                                                    member.role === 'ADMIN' 
+                                                        ? 'bg-purple-100 text-purple-800' 
+                                                        : 'bg-blue-100 text-blue-800'
+                                                }`}>
+                                                    <Shield className="h-3 w-3 mr-1" />
+                                                    {member.role}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </main>
         </div>
     );
 };
