@@ -11,7 +11,8 @@ import {
   Plus,
   TrendingUp,
   Clock,
-  CheckCircle
+  CheckCircle,
+  DollarSign
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -176,6 +177,16 @@ const Dashboard = () => {
                   <Users className="h-4 w-4 text-green-600" />
                 </div>
                 <span className="text-gray-700 font-medium">View Team Members</span>
+              </button>
+              
+              <button 
+                onClick={() => navigate('/budget')}
+                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-emerald-50 rounded-lg transition-all duration-200 hover:shadow-sm transform hover:scale-[1.02]"
+              >
+                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 text-emerald-600" />
+                </div>
+                <span className="text-gray-700 font-medium">Budget Management</span>
               </button>
               
               <button className="w-full flex items-center space-x-3 p-3 text-left hover:bg-purple-50 rounded-lg transition-all duration-200 hover:shadow-sm transform hover:scale-[1.02]">
