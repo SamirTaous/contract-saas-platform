@@ -1,16 +1,79 @@
-# React + Vite
+ContractSaaS - Frontend Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the React-based frontend for the Smart Contract SaaS Platform. It provides a high-performance, responsive interface for managing multi-tenant organizational structures and budgetary governance.
+UI Overview
 
-Currently, two official plugins are available:
+The application follows a modern Enterprise SaaS aesthetic, focusing on data clarity and user efficiency.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+    Unified Dashboard: Real-time financial summary cards (Total Budget, Committed, Remaining).
 
-## React Compiler
+    Budgetary Governance: Automated Excel provisioning and hierarchical budget line tracking.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+    Team Management: Role-based member listing and administrative controls.
 
-## Expanding the ESLint configuration
+    Secure Authentication: Dual-mode registration (Create Org vs. Join Team) and protected session management.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Tech Stack
+
+    Core: React 18 + Vite (Lightning-fast build tool).
+
+    Styling: Tailwind CSS (Utility-first CSS for custom UI).
+
+    Routing: React Router 6 (Client-side navigation and Protected Routes).
+
+    HTTP Client: Axios (Centralized API management with JWT interceptors).
+
+    Icons: Lucide React (Consistent, high-quality stroke icons).
+
+Key Features
+
+    Stateless JWT Authentication: Securely stores and manages tokens in localStorage with automated headers for API requests.
+
+    Multi-tenant Logic: The UI dynamically adapts based on the UserContext (Org Name, Role, Permissions).
+
+    Data Visualization: Custom budget utilization progress bars and financial health indicators.
+
+    Bulk Provisioning: Drag-and-drop Excel upload interface for initializing organization budgets.
+
+    Role-Based UI: Specific views and actions restricted to USER, ADMIN, or SUPER_ADMIN.
+
+Project Structure
+code Text
+
+frontend/
+├── src/
+│   ├── api/              # Axios instances and API definitions
+│   ├── components/       # Reusable UI elements (Buttons, Inputs, Sidebar)
+│   ├── pages/            # Main views (Login, Dashboard, Budget, Team)
+│   ├── hooks/            # Custom logic (Auth state, Data fetching)
+│   ├── context/          # Global UserContext state management
+│   ├── App.jsx           # Main routing and layout configuration
+│   └── main.jsx          # Application entry point
+├── tailwind.config.js    # Design system configuration
+└── vite.config.js        # Build tool settings
+
+Getting Started
+Prerequisites
+
+    Node.js (v18 or higher)
+
+    Back-end microservices running on ports 8081 and 8082.
+
+Installation
+
+    Navigate to the frontend directory:
+    code Bash
+
+    cd frontend
+
+    Install dependencies:
+    code Bash
+
+    npm install
+
+    Launch the development server:
+    code Bash
+
+    npm run dev
+
+    Access the application at http://localhost:5173.
