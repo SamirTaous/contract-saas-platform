@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Building2, 
   Upload, 
   Search, 
   DollarSign, 
@@ -10,18 +9,14 @@ import {
   FileSpreadsheet,
   AlertCircle,
   CheckCircle,
-  ArrowLeft,
-  Filter,
-  Download
+  Filter
 } from 'lucide-react';
 import axios from 'axios';
 
-// Create axios instance for budget operations
 const budgetApi = axios.create({
   baseURL: 'http://localhost:8082/api/budget'
 });
 
-// Add interceptor for authentication
 budgetApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -43,7 +38,6 @@ const BudgetDashboard = () => {
   
   const navigate = useNavigate();
 
-  // Check user authentication and role
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -56,7 +50,6 @@ const BudgetDashboard = () => {
     const parsedUser = JSON.parse(userData);
     setUser(parsedUser);
     
-    // Check if user has admin privileges
     if (!['ADMIN', 'SUPER_ADMIN'].includes(parsedUser.role)) {
       setError('Access Denied: You need administrator privileges to access the Budget Management Dashboard.');
       setLoading(false);
@@ -66,7 +59,6 @@ const BudgetDashboard = () => {
     fetchBudgetData();
   }, [navigate]);
 
-  // Fetch budget data from backend
   const fetchBudgetData = async () => {
     try {
       setLoading(true);
@@ -82,7 +74,6 @@ const BudgetDashboard = () => {
     }
   };
 
-  // Calculate financial summary
   const calculateSummary = () => {
     const totalBudget = budgetLines.reduce((sum, line) => sum + (line.initialAmount || 0), 0);
     const totalCommitted = budgetLines.reduce((sum, line) => sum + (line.committedAmount || 0), 0);
@@ -95,7 +86,6 @@ const BudgetDashboard = () => {
     };
   };
 
-  // Handle file upload
   const handleFileUpload = async (file) => {
     if (!file) return;
     
@@ -112,9 +102,8 @@ const BudgetDashboard = () => {
       });
       
       setUploadSuccess(true);
-      await fetchBudgetData(); // Refresh data after successful upload
+      await fetchBudgetData();
       
-      // Hide success message after 3 seconds
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (err) {
       console.error('Failed to upload file:', err);
@@ -124,11 +113,9 @@ const BudgetDashboard = () => {
     }
   };
 
-  // Filter budget lines based on search and type
   const filterBudgetLines = useCallback(() => {
     let filtered = budgetLines;
     
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(line => 
         line.article?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -137,7 +124,6 @@ const BudgetDashboard = () => {
       );
     }
     
-    // Filter by type
     if (typeFilter !== 'ALL') {
       filtered = filtered.filter(line => line.type === typeFilter);
     }
@@ -149,7 +135,6 @@ const BudgetDashboard = () => {
     filterBudgetLines();
   }, [filterBudgetLines]);
 
-  // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -157,7 +142,6 @@ const BudgetDashboard = () => {
     }).format(amount || 0);
   };
 
-  // Get badge color for type
   const getTypeBadgeColor = (type) => {
     switch (type) {
       case 'MDD':
@@ -201,273 +185,234 @@ const BudgetDashboard = () => {
   const summary = calculateSummary();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">Budget Management</h1>
-                  <p className="text-sm text-gray-500">Service Comptabilité</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{user?.username}</p>
-                <p className="text-xs text-gray-500">{user?.role}</p>
-              </div>
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">
-                  {user?.username?.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            </div>
+    <div className="p-6">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Budget Management</h1>
+            <p className="text-gray-600 mt-1">Service Comptabilité - Manage your organization's budget</p>
           </div>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Error Alert */}
-        {error && !error.includes('Access Denied') && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
-            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-            <p className="text-red-700">{error}</p>
-            <button
-              onClick={() => setError(null)}
-              className="ml-auto text-red-500 hover:text-red-700"
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        {/* Success Alert */}
-        {uploadSuccess && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3">
-            <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-            <p className="text-green-700">Excel file uploaded and processed successfully!</p>
-          </div>
-        )}
-
-        {/* Financial Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Budget</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {formatCurrency(summary.totalBudget)}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Committed</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {formatCurrency(summary.totalCommitted)}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Remaining Balance</p>
-                <p className={`text-2xl font-bold mt-1 ${
-                  summary.remainingBalance >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {formatCurrency(summary.remainingBalance)}
-                </p>
-              </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                summary.remainingBalance >= 0 ? 'bg-green-50' : 'bg-red-50'
-              }`}>
-                {summary.remainingBalance >= 0 ? (
-                  <TrendingUp className="h-6 w-6 text-green-600" />
-                ) : (
-                  <TrendingDown className="h-6 w-6 text-red-600" />
-                )}
-              </div>
-            </div>
-          </div>
+      </div>
+      
+      {error && !error.includes('Access Denied') && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
+          <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+          <p className="text-red-700">{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto text-red-500 hover:text-red-700"
+          >
+            ×
+          </button>
         </div>
+      )}
 
-        {/* Excel Import Zone */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Import Budget Data</h2>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={(e) => handleFileUpload(e.target.files[0])}
-              className="hidden"
-              id="file-upload"
-              disabled={uploading}
-            />
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer flex flex-col items-center space-y-4"
-            >
-              {uploading ? (
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              ) : (
-                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <Upload className="h-6 w-6 text-blue-600" />
-                </div>
-              )}
-              <div>
-                <p className="text-lg font-medium text-gray-900">
-                  {uploading ? 'Processing...' : 'Drop Excel file here or click to browse'}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Supports .xlsx and .xls files
-                </p>
-              </div>
-            </label>
-          </div>
+      {uploadSuccess && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3">
+          <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+          <p className="text-green-700">Excel file uploaded and processed successfully!</p>
         </div>
+      )}
 
-        {/* Budget Master Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-              <h2 className="text-lg font-semibold text-gray-900">Budget Lines</h2>
-              
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by article, label, or code..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
-                  />
-                </div>
-                
-                {/* Type Filter */}
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="ALL">All Types</option>
-                  <option value="MDD">MDD</option>
-                  <option value="INV">INV</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Full Code
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Article
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Paragraph
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Line
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Label
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Initial Amount
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredLines.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                      <FileSpreadsheet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-lg font-medium">No budget lines found</p>
-                      <p className="text-sm">
-                        {budgetLines.length === 0 
-                          ? 'Import an Excel file to get started' 
-                          : 'Try adjusting your search or filter criteria'
-                        }
-                      </p>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredLines.map((line, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                        {line.fullCode}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeBadgeColor(line.type)}`}>
-                          {line.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {line.article}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {line.paragraph}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {line.line}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                        {line.label}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                        {formatCurrency(line.initialAmount)}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Table Footer */}
-          {filteredLines.length > 0 && (
-            <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-              <p className="text-sm text-gray-700">
-                Showing {filteredLines.length} of {budgetLines.length} budget lines
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Budget</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {formatCurrency(summary.totalBudget)}
               </p>
             </div>
-          )}
+            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
         </div>
-      </main>
+
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Committed</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {formatCurrency(summary.totalCommitted)}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-orange-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Remaining Balance</p>
+              <p className={`text-2xl font-bold mt-1 ${
+                summary.remainingBalance >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {formatCurrency(summary.remainingBalance)}
+              </p>
+            </div>
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+              summary.remainingBalance >= 0 ? 'bg-green-50' : 'bg-red-50'
+            }`}>
+              {summary.remainingBalance >= 0 ? (
+                <TrendingUp className="h-6 w-6 text-green-600" />
+              ) : (
+                <TrendingDown className="h-6 w-6 text-red-600" />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-8">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Import Budget Data</h2>
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={(e) => handleFileUpload(e.target.files[0])}
+            className="hidden"
+            id="file-upload"
+            disabled={uploading}
+          />
+          <label
+            htmlFor="file-upload"
+            className="cursor-pointer flex flex-col items-center space-y-4"
+          >
+            {uploading ? (
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            ) : (
+              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                <Upload className="h-6 w-6 text-blue-600" />
+              </div>
+            )}
+            <div>
+              <p className="text-lg font-medium text-gray-900">
+                {uploading ? 'Processing...' : 'Drop Excel file here or click to browse'}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                Supports .xlsx and .xls files
+              </p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <h2 className="text-lg font-semibold text-gray-900">Budget Lines</h2>
+            
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by article, label, or code..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
+                />
+              </div>
+              
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="ALL">All Types</option>
+                <option value="MDD">MDD</option>
+                <option value="INV">INV</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Full Code
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Article
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Paragraph
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Line
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Label
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Initial Amount
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredLines.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                    <FileSpreadsheet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-lg font-medium">No budget lines found</p>
+                    <p className="text-sm">
+                      {budgetLines.length === 0 
+                        ? 'Import an Excel file to get started' 
+                        : 'Try adjusting your search or filter criteria'
+                      }
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredLines.map((line, index) => (
+                  <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                      {line.fullCode}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeBadgeColor(line.type)}`}>
+                        {line.type}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {line.article}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {line.paragraph}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {line.line}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                      {line.label}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                      {formatCurrency(line.initialAmount)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredLines.length > 0 && (
+          <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+            <p className="text-sm text-gray-700">
+              Showing {filteredLines.length} of {budgetLines.length} budget lines
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
