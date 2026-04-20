@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import UserList from './components/UserList';
 import BudgetDashboard from './components/BudgetDashboard';
+import BudgetLineDetails from './components/BudgetLineDetails';
 import './App.css';
 
 // Protected routes wrapper that uses Layout
@@ -25,6 +26,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<UserList />} />
           <Route path="budget" element={<BudgetDashboard />} />
+          <Route path="budget/line/:id" element={<BudgetLineDetails />} />
         </Route>
       </Routes>
     </Router>

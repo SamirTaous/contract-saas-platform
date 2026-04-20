@@ -9,7 +9,8 @@ import {
   FileSpreadsheet,
   AlertCircle,
   CheckCircle,
-  Filter
+  Filter,
+  Eye
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -356,12 +357,15 @@ const BudgetDashboard = () => {
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Initial Amount
                 </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredLines.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                     <FileSpreadsheet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-lg font-medium">No budget lines found</p>
                     <p className="text-sm">
@@ -373,33 +377,50 @@ const BudgetDashboard = () => {
                   </td>
                 </tr>
               ) : (
-                filteredLines.map((line, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                      {line.fullCode}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeBadgeColor(line.type)}`}>
-                        {line.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {line.article}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {line.paragraph}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {line.line}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                      {line.label}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                      {formatCurrency(line.initialAmount)}
-                    </td>
-                  </tr>
-                ))
+                filteredLines.map((line, filteredIndex) => {
+                  // Create a unique identifier from the budget line data
+                  const uniqueId = `${line.fullCode}-${line.article}-${line.paragraph}-${line.line}`.replace(/\s+/g, '-');
+                  
+                  return (
+                    <tr 
+                      key={filteredIndex} 
+                      className="hover:bg-blue-50 transition-colors cursor-pointer border-l-4 border-transparent hover:border-blue-500"
+                      onClick={() => navigate(`/budget/line/${encodeURIComponent(uniqueId)}`, { 
+                        state: { budgetLine: line } 
+                      })}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                        {line.fullCode}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeBadgeColor(line.type)}`}>
+                          {line.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {line.article}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {line.paragraph}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {line.line}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                        {line.label}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                        {formatCurrency(line.initialAmount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <button className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 font-medium text-sm mx-auto">
+                          <Eye className="h-4 w-4" />
+                          <span>View</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
