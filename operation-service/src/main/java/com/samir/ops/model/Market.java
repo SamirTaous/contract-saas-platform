@@ -28,6 +28,9 @@ public class Market {
     private String title;
 
     @Column(nullable = false)
+    private String supplier;
+
+    @Column(nullable = false)
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
