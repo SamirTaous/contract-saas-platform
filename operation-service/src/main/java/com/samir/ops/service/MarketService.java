@@ -70,7 +70,7 @@ public class MarketService {
             throw new RuntimeException("Only DRAFT markets can be signed.");
         }
 
-        // The "Double Lock": Subtract from available budget
+        // Subtract from available budget
         BudgetLine line = market.getBudgetLine();
         line.setCommittedAmount(line.getCommittedAmount().add(market.getTotalAmount()));
 
