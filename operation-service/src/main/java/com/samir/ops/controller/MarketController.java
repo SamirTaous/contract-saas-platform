@@ -6,6 +6,7 @@ import com.samir.ops.model.Market;
 import com.samir.ops.service.MarketService;
 import com.samir.ops.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +38,13 @@ public class MarketController {
     public ResponseEntity<Void> sign(@PathVariable UUID uuid, @RequestHeader("Authorization") String token) {
         UserContext user = jwtUtils.getUserContext(token);
         marketService.signMarket(uuid, user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{uuid}/cancel")
+    public ResponseEntity<Void> cancel(@PathVariable UUID uuid, @RequestHeader("Authorization") String token) {
+        UserContext user = jwtUtils.getUserContext(token);
+        marketService.cancelMarket(uuid, user);
         return ResponseEntity.noContent().build();
     }
 }

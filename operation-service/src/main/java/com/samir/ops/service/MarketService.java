@@ -2,6 +2,9 @@ package com.samir.ops.service;
 
 import com.samir.ops.dto.MarketRequest;
 import com.samir.ops.dto.UserContext;
+import com.samir.ops.exception.BudgetLineNotFoundException;
+import com.samir.ops.exception.MarketNotFoundException;
+import com.samir.ops.exception.UnauthorizedAccessException;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.model.Market;
 import com.samir.ops.model.MarketStatus;
@@ -31,11 +34,11 @@ public class MarketService {
     @Transactional
     public void createMarket(MarketRequest request, UserContext user) {
         BudgetLine line = budgetRepository.findBudgetLineByUuid(request.getBudgetLineUuid())
-                .orElseThrow(() -> new RuntimeException("Selected Budget Line not found"));
+                .orElseThrow(() -> new BudgetLineNotFoundException());
 
         // 1. Validation: Ensure user belongs to the budget's organization
         if (!line.getOrganizationId().equals(user.getOrgId())) {
-            throw new RuntimeException("Unauthorized: This budget line belongs to another organization.");
+            throw new UnauthorizedAccessException();
         }
 
         // 2. Validation: Check Solvency (Is there enough money?)
@@ -66,6 +69,10 @@ public class MarketService {
         Market market = marketRepository.findByUuid(marketUuid)
                 .orElseThrow(() -> new RuntimeException("Market not found"));
 
+        if (market.getOrganizationId() != user.getOrgId()){
+            throw new UnauthorizedAccessException();
+        }
+
         if (market.getStatus() != MarketStatus.DRAFT) {
             throw new RuntimeException("Only DRAFT markets can be signed.");
         }
@@ -87,6 +94,30 @@ public class MarketService {
         marketRepository.save(market); // Update the market status
 
         log.info("Market '{}' SIGNED. Funds committed: {} DH", market.getTitle(), market.getTotalAmount());
+    }
+
+    /**
+     * The "Cancel" Phase.
+     * Back out of the contract and unlock the money in the Budget Service.
+     */
+
+    @Transactional
+    public void cancelMarket(UUID uuid, UserContext user) {
+
+        Market market = marketRepository.findByUuid(uuid)
+                .orElseThrow(() -> new MarketNotFoundException());
+
+        if (market.getOrganizationId() != user.getOrgId()){
+            throw new UnauthorizedAccessException();
+        }
+
+        if (market.getStatus() == MarketStatus.SIGNED) {
+            // subtract from Committed
+            BudgetLine line = market.getBudgetLine();
+            line.setCommittedAmount(line.getCommittedAmount().subtract(market.getTotalAmount()));
+            budgetRepository.save(line);
+        }
+        marketRepository.delete(market);
     }
 
     public List<Market> getMyMarkets(UserContext user) {
