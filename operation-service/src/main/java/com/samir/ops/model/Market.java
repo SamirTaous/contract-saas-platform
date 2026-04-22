@@ -1,5 +1,6 @@
 package com.samir.ops.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,6 +39,7 @@ public class Market {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "budget_line_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private BudgetLine budgetLine;
 
     @Column(nullable = false)
