@@ -70,6 +70,13 @@ public class MarketService {
             throw new RuntimeException("Only DRAFT markets can be signed.");
         }
 
+        BigDecimal available = market.getBudgetLine().getInitialAmount()
+                .subtract(market.getBudgetLine().getCommittedAmount());
+
+        if (available.compareTo(market.getTotalAmount()) < 0) {
+            throw new RuntimeException("Cannot sign! Budget was depleted by another project. Only " + available + " DH left.");
+        }
+
         // Subtract from available budget
         BudgetLine line = market.getBudgetLine();
         line.setCommittedAmount(line.getCommittedAmount().add(market.getTotalAmount()));
