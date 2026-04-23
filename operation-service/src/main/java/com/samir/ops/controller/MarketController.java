@@ -29,7 +29,7 @@ public class MarketController {
     }
 
     @GetMapping("/my-org")
-    public ResponseEntity<List<Market>> list(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<List<MarketResponse>> list(@RequestHeader("Authorization") String token) {
         UserContext user = jwtUtils.getUserContext(token);
         return ResponseEntity.ok(marketService.getMyMarkets(user));
     }

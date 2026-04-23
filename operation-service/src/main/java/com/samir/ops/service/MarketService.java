@@ -123,11 +123,15 @@ public class MarketService {
         marketRepository.delete(market);
     }
 
-    public List<Market> getMyMarkets(UserContext user) {
+    public List<MarketResponse> getMyMarkets(UserContext user) {
         if ("SUPER_ADMIN".equals(user.getRole())) {
-            return marketRepository.findAll();
+            return marketRepository.findAll().stream()
+                    .map(market -> mapToResponse(market))
+                    .toList();
         }
-        return marketRepository.findAllByOrganizationId(user.getOrgId());
+        return marketRepository.findAllByOrganizationId(user.getOrgId()).stream()
+                .map(market -> mapToResponse(market))
+                .toList();
     }
 
     private MarketResponse mapToResponse(Market market) {
