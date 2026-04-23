@@ -1,6 +1,7 @@
 package com.samir.ops.controller;
 
 import com.samir.ops.dto.MarketRequest;
+import com.samir.ops.dto.MarketResponse;
 import com.samir.ops.dto.UserContext;
 import com.samir.ops.model.Market;
 import com.samir.ops.service.MarketService;
@@ -22,10 +23,9 @@ public class MarketController {
     private final JwtUtils jwtUtils;
 
     @PostMapping("/create")
-    public ResponseEntity<Void> create(@RequestBody MarketRequest request, @RequestHeader("Authorization") String token) {
-        UserContext user = jwtUtils.getUserContext(token);
-        marketService.createMarket(request, user);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<MarketResponse> create(@RequestBody MarketRequest request, @RequestHeader("Authorization") String token) {
+        UserContext user = jwtUtils.getUserContext(token);;
+        return ResponseEntity.ok(marketService.createMarket(request, user));
     }
 
     @GetMapping("/my-org")
@@ -35,10 +35,9 @@ public class MarketController {
     }
 
     @PatchMapping("/{uuid}/sign")
-    public ResponseEntity<Void> sign(@PathVariable UUID uuid, @RequestHeader("Authorization") String token) {
+    public ResponseEntity<MarketResponse> sign(@PathVariable UUID uuid, @RequestHeader("Authorization") String token) {
         UserContext user = jwtUtils.getUserContext(token);
-        marketService.signMarket(uuid, user);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(marketService.signMarket(uuid, user));
     }
 
     @DeleteMapping("/{uuid}/cancel")

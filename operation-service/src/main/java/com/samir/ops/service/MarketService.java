@@ -1,10 +1,12 @@
 package com.samir.ops.service;
 
 import com.samir.ops.dto.MarketRequest;
+import com.samir.ops.dto.MarketResponse;
 import com.samir.ops.dto.UserContext;
 import com.samir.ops.exception.BudgetLineNotFoundException;
 import com.samir.ops.exception.MarketNotFoundException;
 import com.samir.ops.exception.UnauthorizedAccessException;
+import com.samir.ops.exception.UnsufficientBudgetException;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.model.Market;
 import com.samir.ops.model.MarketStatus;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.yaml.snakeyaml.error.Mark;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,7 +35,7 @@ public class MarketService {
      * Validates if the selected budget line has enough funds.
      */
     @Transactional
-    public void createMarket(MarketRequest request, UserContext user) {
+    public MarketResponse createMarket(MarketRequest request, UserContext user) {
         BudgetLine line = budgetRepository.findBudgetLineByUuid(request.getBudgetLineUuid())
                 .orElseThrow(() -> new BudgetLineNotFoundException());
 
@@ -44,10 +47,10 @@ public class MarketService {
         // 2. Validation: Check Solvency (Is there enough money?)
         BigDecimal available = line.getInitialAmount().subtract(line.getCommittedAmount());
         if (available.compareTo(request.getTotalAmount()) < 0) {
-            throw new RuntimeException("Insufficient Budget! Available: " + available + " DH");
+            throw new UnsufficientBudgetException(available);
         }
 
-        // 3. Save as DRAFT (Money is not "Locked" yet in the budget table)
+        // 3. Save as DRAFT
         Market market = new Market();
         market.setTitle(request.getTitle());
         market.setSupplier(request.getSupplier());
@@ -57,7 +60,8 @@ public class MarketService {
         market.setStatus(MarketStatus.DRAFT);
 
         marketRepository.save(market);
-        log.info("Market '{}' created in DRAFT mode for Org {}", market.getTitle(), user.getOrgName());
+
+        return mapToResponse(market);
     }
 
     /**
@@ -65,7 +69,7 @@ public class MarketService {
      * Officially signs the contract and locks the money in the Budget Service.
      */
     @Transactional
-    public void signMarket(UUID marketUuid, UserContext user) {
+    public MarketResponse signMarket(UUID marketUuid, UserContext user) {
         Market market = marketRepository.findByUuid(marketUuid)
                 .orElseThrow(() -> new RuntimeException("Market not found"));
 
@@ -92,8 +96,7 @@ public class MarketService {
 
         budgetRepository.save(line); // Update the budget line
         marketRepository.save(market); // Update the market status
-
-        log.info("Market '{}' SIGNED. Funds committed: {} DH", market.getTitle(), market.getTotalAmount());
+        return mapToResponse(market);
     }
 
     /**
@@ -125,5 +128,18 @@ public class MarketService {
             return marketRepository.findAll();
         }
         return marketRepository.findAllByOrganizationId(user.getOrgId());
+    }
+
+    private MarketResponse mapToResponse(Market market) {
+        return new MarketResponse(
+                market.getUuid(),
+                market.getTitle(),
+                market.getSupplier(),
+                market.getTotalAmount(),
+                market.getStatus().toString(),
+                market.getBudgetLine().getFullCode(),
+                market.getBudgetLine().getUuid(),
+                market.getBudgetLine().getInitialAmount().subtract(market.getTotalAmount())
+                );
     }
 }

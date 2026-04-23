@@ -9,24 +9,27 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     // Specific handler for unauthorized access
-
     @ExceptionHandler(UnauthorizedAccessException.class)
     public ResponseEntity<String> handleUnauthorizedAccess(UnauthorizedAccessException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
 
     // Specific handler for budget lines
-
     @ExceptionHandler(BudgetLineNotFoundException.class)
     public ResponseEntity<String> handleBudgetLineNotFound(BudgetLineNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
     // Specific handler for markets
-
     @ExceptionHandler(MarketNotFoundException.class)
     public ResponseEntity<String> handleMarketNotFound(MarketNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    // Specific handler for markets
+    @ExceptionHandler(UnsufficientBudgetException.class)
+    public ResponseEntity<String> handleUnsufficientBudget(UnsufficientBudgetException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 
 
