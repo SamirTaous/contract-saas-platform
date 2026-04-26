@@ -165,19 +165,19 @@ const AuthForm = () => {
           {/* Content */}
           <div className="relative z-10">
             <h2 className="text-3xl font-bold text-white mb-4">
-              Welcome Back
+              Bon Retour
             </h2>
             <p className="text-blue-100 text-lg leading-relaxed">
-              Sign in to continue managing your contracts and collaborate with your team.
+              Connectez-vous pour continuer à gérer vos contrats et collaborer avec votre équipe.
             </p>
           </div>
 
           {/* Bottom Quote */}
           <div className="relative z-10">
             <blockquote className="text-blue-100 italic">
-              "The most efficient contract management platform we've ever used."
+              "La plateforme de gestion de contrats la plus efficace que nous ayons jamais utilisée."
             </blockquote>
-            <cite className="text-blue-200 text-sm mt-2 block">— Michael Rodriguez, CEO</cite>
+            <cite className="text-blue-200 text-sm mt-2 block">— Michael Rodriguez, PDG</cite>
           </div>
         </div>
 
@@ -191,21 +191,21 @@ const AuthForm = () => {
                 </div>
                 <span className="text-2xl font-bold text-gray-900">ContractSaaS</span>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign In</h1>
-              <p className="text-gray-600">Welcome back! Please sign in to your account</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Connexion</h1>
+              <p className="text-gray-600">Bon retour ! Veuillez vous connecter à votre compte</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
               <InputField
                 icon={User}
                 type="text"
-                placeholder="Username"
+                placeholder="Nom d'utilisateur"
                 value={formData.username}
                 onChange={(value) => handleInputChange('username', value)}
               />
 
               <PasswordField
-                placeholder="Password"
+                placeholder="Mot de passe"
                 value={formData.password}
                 onChange={(value) => handleInputChange('password', value)}
                 showPassword={showPassword}
@@ -220,22 +220,22 @@ const AuthForm = () => {
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Signing in...
+                    Connexion en cours...
                   </div>
                 ) : (
-                  'Sign In'
+                  'Se connecter'
                 )}
               </button>
 
               <div className="text-center">
                 <p className="text-gray-600">
-                  Don't have an account?{' '}
+                  Vous n'avez pas de compte ?{' '}
                   <button
                     type="button"
                     onClick={() => setIsLogin(false)}
                     className="text-blue-600 hover:text-blue-700 font-semibold transition-colors hover:underline"
                   >
-                    Create one
+                    Créer un compte
                   </button>
                 </p>
               </div>
@@ -271,19 +271,19 @@ const AuthForm = () => {
         {/* Content */}
         <div className="relative z-10">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Join Our Platform
+            Rejoignez Notre Plateforme
           </h2>
           <p className="text-green-100 text-lg leading-relaxed">
-            Create your account and start managing contracts with your team today.
+            Créez votre compte et commencez à gérer les contrats avec votre équipe dès aujourd'hui.
           </p>
         </div>
 
         {/* Bottom Quote */}
         <div className="relative z-10">
           <blockquote className="text-green-100 italic">
-            "Setting up our organization was incredibly simple and intuitive."
+            "La configuration de notre organisation a été incroyablement simple et intuitive."
           </blockquote>
-          <cite className="text-green-200 text-sm mt-2 block">— Lisa Park, Operations Manager</cite>
+          <cite className="text-green-200 text-sm mt-2 block">— Lisa Park, Responsable des Opérations</cite>
         </div>
       </div>
 
@@ -297,8 +297,8 @@ const AuthForm = () => {
               </div>
               <span className="text-2xl font-bold text-gray-900">ContractSaaS</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-            <p className="text-gray-600">Join thousands of businesses using ContractSaaS</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Créer un Compte</h1>
+            <p className="text-gray-600">Rejoignez des milliers d'entreprises utilisant ContractSaaS</p>
           </div>
 
           <form onSubmit={handleRegister} className="space-y-6">
@@ -313,7 +313,7 @@ const AuthForm = () => {
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                New Organization
+                Nouvelle Organisation
               </button>
               <button
                 type="button"
@@ -324,14 +324,14 @@ const AuthForm = () => {
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                Join Team
+                Rejoindre une Équipe
               </button>
             </div>
 
             <InputField
               icon={User}
               type="text"
-              placeholder="Full Name"
+              placeholder="Nom Complet"
               value={formData.username}
               onChange={(value) => handleInputChange('username', value)}
             />
@@ -339,13 +339,13 @@ const AuthForm = () => {
             <InputField
               icon={Mail}
               type="email"
-              placeholder="Email Address"
+              placeholder="Adresse Email"
               value={formData.email}
               onChange={(value) => handleInputChange('email', value)}
             />
 
             <PasswordField
-              placeholder="Password"
+              placeholder="Mot de passe"
               value={formData.password}
               onChange={(value) => handleInputChange('password', value)}
               showPassword={showPassword}
@@ -356,7 +356,7 @@ const AuthForm = () => {
               <InputField
                 icon={Building}
                 type="text"
-                placeholder="Organization Name"
+                placeholder="Nom de l'Organisation"
                 value={formData.orgName}
                 onChange={(value) => handleInputChange('orgName', value)}
               />
@@ -364,7 +364,7 @@ const AuthForm = () => {
               <InputField
                 icon={Key}
                 type="text"
-                placeholder="Invite Code (e.g., SAM-1234)"
+                placeholder="Code d'Invitation (ex: SAM-1234)"
                 value={formData.inviteCode}
                 onChange={(value) => handleInputChange('inviteCode', value)}
               />
@@ -378,22 +378,22 @@ const AuthForm = () => {
               {loading ? (
                 <div className="flex items-center justify-center">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Creating account...
+                  Création du compte...
                 </div>
               ) : (
-                'Create Account'
+                'Créer un Compte'
               )}
             </button>
 
             <div className="text-center">
               <p className="text-gray-600">
-                Already have an account?{' '}
+                Vous avez déjà un compte ?{' '}
                 <button
                   type="button"
                   onClick={() => setIsLogin(true)}
                   className="text-green-600 hover:text-green-700 font-semibold transition-colors hover:underline"
                 >
-                  Sign in
+                  Se connecter
                 </button>
               </p>
             </div>

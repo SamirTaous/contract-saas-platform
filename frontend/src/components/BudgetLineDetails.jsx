@@ -149,7 +149,7 @@ const BudgetLineDetails = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading budget line details...</p>
+          <p className="text-gray-600">Chargement des détails de la ligne budgétaire...</p>
         </div>
       </div>
     );
@@ -160,13 +160,13 @@ const BudgetLineDetails = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Erreur</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate('/budget')}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Back to Budget
+            Retour au Budget
           </button>
         </div>
       </div>
@@ -178,13 +178,13 @@ const BudgetLineDetails = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Budget Line Not Found</h2>
-          <p className="text-gray-600 mb-6">The requested budget line could not be found.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Ligne Budgétaire Non Trouvée</h2>
+          <p className="text-gray-600 mb-6">La ligne budgétaire demandée n'a pas pu être trouvée.</p>
           <button
             onClick={() => navigate('/budget')}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Back to Budget
+            Retour au Budget
           </button>
         </div>
       </div>
@@ -206,12 +206,12 @@ const BudgetLineDetails = () => {
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span>Back to Budget</span>
+                <span>Retour au Budget</span>
               </button>
               <div className="h-6 w-px bg-gray-300"></div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Budget Line Details</h1>
-                <p className="text-gray-600 mt-1">Comprehensive view of budget line {budgetLine.fullCode}</p>
+                <h1 className="text-2xl font-bold text-gray-900">Détails de la Ligne Budgétaire</h1>
+                <p className="text-gray-600 mt-1">Vue complète de la ligne budgétaire {budgetLine.fullCode}</p>
               </div>
             </div>
 
@@ -223,14 +223,14 @@ const BudgetLineDetails = () => {
                     className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                   >
                     <Save className="h-4 w-4" />
-                    <span>Save</span>
+                    <span>Enregistrer</span>
                   </button>
                   <button
                     onClick={handleCancel}
                     className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
                   >
                     <X className="h-4 w-4" />
-                    <span>Cancel</span>
+                    <span>Annuler</span>
                   </button>
                 </>
               ) : (
@@ -239,7 +239,7 @@ const BudgetLineDetails = () => {
                   className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Edit className="h-4 w-4" />
-                  <span>Edit</span>
+                  <span>Modifier</span>
                 </button>
               )}
             </div>
@@ -255,7 +255,7 @@ const BudgetLineDetails = () => {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
                   <FileText className="h-5 w-5 text-blue-600" />
-                  <span>Basic Information</span>
+                  <span>Informations de Base</span>
                 </h2>
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getTypeBadgeColor(budgetLine.type)}`}>
                   {budgetLine.type}
@@ -265,7 +265,7 @@ const BudgetLineDetails = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Code</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Code Complet</label>
                     <div className="flex items-center space-x-2">
                       <Hash className="h-4 w-4 text-gray-400" />
                       <span className="text-sm font-mono bg-gray-50 px-3 py-2 rounded-lg border">
@@ -291,7 +291,7 @@ const BudgetLineDetails = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Paragraph</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Paragraphe</label>
                     {isEditing ? (
                       <input
                         type="text"
@@ -309,7 +309,7 @@ const BudgetLineDetails = () => {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Line</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ligne</label>
                     {isEditing ? (
                       <input
                         type="text"
@@ -343,7 +343,7 @@ const BudgetLineDetails = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
                     <div className="flex items-center space-x-2">
                       {remainingAmount >= 0 ? (
                         <CheckCircle className="h-4 w-4 text-green-500" />
@@ -352,7 +352,7 @@ const BudgetLineDetails = () => {
                       )}
                       <span className={`text-sm font-medium ${remainingAmount >= 0 ? 'text-green-700' : 'text-red-700'
                         }`}>
-                        {remainingAmount >= 0 ? 'Within Budget' : 'Over Budget'}
+                        {remainingAmount >= 0 ? 'Dans le Budget' : 'Hors Budget'}
                       </span>
                     </div>
                   </div>
@@ -364,23 +364,23 @@ const BudgetLineDetails = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
                 <Building className="h-5 w-5 text-blue-600" />
-                <span>Description & Label</span>
+                <span>Description et Libellé</span>
               </h2>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Label</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Libellé</label>
                 {isEditing ? (
                   <textarea
                     value={editedLine.label || ''}
                     onChange={(e) => setEditedLine({ ...editedLine, label: e.target.value })}
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter budget line description..."
+                    placeholder="Entrez la description de la ligne budgétaire..."
                   />
                 ) : (
                   <div className="bg-gray-50 border rounded-lg p-4">
                     <p className="text-gray-900 whitespace-pre-wrap">
-                      {budgetLine.label || 'No description available'}
+                      {budgetLine.label || 'Aucune description disponible'}
                     </p>
                   </div>
                 )}
@@ -394,7 +394,7 @@ const BudgetLineDetails = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center space-x-2">
                 <DollarSign className="h-5 w-5 text-blue-600" />
-                <span>Financial Overview</span>
+                <span>Aperçu Financier</span>
               </h2>
 
               <div className="space-y-6">
@@ -402,7 +402,7 @@ const BudgetLineDetails = () => {
                 <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-blue-700">Initial Budget</p>
+                      <p className="text-sm font-medium text-blue-700">Budget Initial</p>
                       <p className="text-2xl font-bold text-blue-900 mt-1">
                         {formatCurrency(budgetLine.initialAmount)}
                       </p>
@@ -417,7 +417,7 @@ const BudgetLineDetails = () => {
                 <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-orange-700">Committed</p>
+                      <p className="text-sm font-medium text-orange-700">Engagé</p>
                       <p className="text-2xl font-bold text-orange-900 mt-1">
                         {formatCurrency(budgetLine.committedAmount)}
                       </p>
@@ -437,7 +437,7 @@ const BudgetLineDetails = () => {
                     <div>
                       <p className={`text-sm font-medium ${remainingAmount >= 0 ? 'text-green-700' : 'text-red-700'
                         }`}>
-                        Remaining
+                        Restant
                       </p>
                       <p className={`text-2xl font-bold mt-1 ${remainingAmount >= 0 ? 'text-green-900' : 'text-red-900'
                         }`}>
@@ -460,11 +460,11 @@ const BudgetLineDetails = () => {
 
             {/* Utilization Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Budget Utilization</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Utilisation du Budget</h2>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Utilization Rate</span>
+                  <span className="text-sm font-medium text-gray-700">Taux d'Utilisation</span>
                   <span className={`text-sm font-bold px-2 py-1 rounded ${getUtilizationColor(utilization)}`}>
                     {utilization.toFixed(1)}%
                   </span>
@@ -492,28 +492,28 @@ const BudgetLineDetails = () => {
 
             {/* Quick Actions Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions Rapides</h2>
 
               <div className="space-y-3">
                 <button className="w-full flex items-center space-x-3 p-3 text-left hover:bg-blue-50 rounded-lg transition-colors border border-gray-200">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                     <DollarSign className="h-4 w-4 text-blue-600" />
                   </div>
-                  <span className="text-gray-700 font-medium">Add Transaction</span>
+                  <span className="text-gray-700 font-medium">Ajouter une Transaction</span>
                 </button>
 
                 <button className="w-full flex items-center space-x-3 p-3 text-left hover:bg-green-50 rounded-lg transition-colors border border-gray-200">
                   <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                     <FileText className="h-4 w-4 text-green-600" />
                   </div>
-                  <span className="text-gray-700 font-medium">Generate Report</span>
+                  <span className="text-gray-700 font-medium">Générer un Rapport</span>
                 </button>
 
                 <button className="w-full flex items-center space-x-3 p-3 text-left hover:bg-purple-50 rounded-lg transition-colors border border-gray-200">
                   <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                     <TrendingUp className="h-4 w-4 text-purple-600" />
                   </div>
-                  <span className="text-gray-700 font-medium">View Analytics</span>
+                  <span className="text-gray-700 font-medium">Voir les Analyses</span>
                 </button>
               </div>
             </div>

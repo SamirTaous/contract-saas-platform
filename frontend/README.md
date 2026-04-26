@@ -1,79 +1,70 @@
-ContractSaaS - Frontend Application
+# ContractSaaS - Application Frontend
 
-This is the React-based frontend for the Smart Contract SaaS Platform. It provides a high-performance, responsive interface for managing multi-tenant organizational structures and budgetary governance.
-UI Overview
+Il s'agit du frontend basé sur React pour la Plateforme SaaS de Contrats Intelligents. Il fournit une interface haute performance et responsive pour gérer les structures organisationnelles multi-locataires et la gouvernance budgétaire.
 
-The application follows a modern Enterprise SaaS aesthetic, focusing on data clarity and user efficiency.
+## Aperçu de l'Interface Utilisateur
 
-    Unified Dashboard: Real-time financial summary cards (Total Budget, Committed, Remaining).
+L'application suit une esthétique SaaS d'entreprise moderne, en se concentrant sur la clarté des données et l'efficacité de l'utilisateur.
 
-    Budgetary Governance: Automated Excel provisioning and hierarchical budget line tracking.
+- **Tableau de Bord Unifié** : Cartes de résumé financier en temps réel (Budget Total, Engagé, Restant).
+- **Gouvernance Budgétaire** : Provisionnement Excel automatisé et suivi hiérarchique des lignes budgétaires.
+- **Gestion d'Équipe** : Liste des membres basée sur les rôles et contrôles administratifs.
+- **Authentification Sécurisée** : Inscription en double mode (Créer une Organisation vs Rejoindre une Équipe) et gestion de session protégée.
 
-    Team Management: Role-based member listing and administrative controls.
+## Stack Technologique
 
-    Secure Authentication: Dual-mode registration (Create Org vs. Join Team) and protected session management.
+- **Core** : React 18 + Vite (Outil de build ultra-rapide).
+- **Stylisation** : Tailwind CSS (CSS utilitaire pour une interface personnalisée).
+- **Routage** : React Router 6 (Navigation côté client et Routes Protégées).
+- **Client HTTP** : Axios (Gestion API centralisée avec intercepteurs JWT).
+- **Icônes** : Lucide React (Icônes de trait cohérentes et de haute qualité).
 
-Tech Stack
+## Fonctionnalités Clés
 
-    Core: React 18 + Vite (Lightning-fast build tool).
+- **Authentification JWT Sans État** : Stocke et gère de manière sécurisée les tokens dans localStorage avec des en-têtes automatisés pour les requêtes API.
+- **Logique Multi-locataire** : L'interface utilisateur s'adapte dynamiquement en fonction du UserContext (Nom de l'Organisation, Rôle, Permissions).
+- **Visualisation de Données** : Barres de progression d'utilisation budgétaire personnalisées et indicateurs de santé financière.
+- **Provisionnement en Masse** : Interface de téléchargement Excel par glisser-déposer pour initialiser les budgets d'organisation.
+- **Interface Basée sur les Rôles** : Vues et actions spécifiques restreintes à USER, ADMIN, ou SUPER_ADMIN.
 
-    Styling: Tailwind CSS (Utility-first CSS for custom UI).
+## Structure du Projet
 
-    Routing: React Router 6 (Client-side navigation and Protected Routes).
-
-    HTTP Client: Axios (Centralized API management with JWT interceptors).
-
-    Icons: Lucide React (Consistent, high-quality stroke icons).
-
-Key Features
-
-    Stateless JWT Authentication: Securely stores and manages tokens in localStorage with automated headers for API requests.
-
-    Multi-tenant Logic: The UI dynamically adapts based on the UserContext (Org Name, Role, Permissions).
-
-    Data Visualization: Custom budget utilization progress bars and financial health indicators.
-
-    Bulk Provisioning: Drag-and-drop Excel upload interface for initializing organization budgets.
-
-    Role-Based UI: Specific views and actions restricted to USER, ADMIN, or SUPER_ADMIN.
-
-Project Structure
-code Text
-
+```
 frontend/
 ├── src/
-│   ├── api/              # Axios instances and API definitions
-│   ├── components/       # Reusable UI elements (Buttons, Inputs, Sidebar)
-│   ├── pages/            # Main views (Login, Dashboard, Budget, Team)
-│   ├── hooks/            # Custom logic (Auth state, Data fetching)
-│   ├── context/          # Global UserContext state management
-│   ├── App.jsx           # Main routing and layout configuration
-│   └── main.jsx          # Application entry point
-├── tailwind.config.js    # Design system configuration
-└── vite.config.js        # Build tool settings
+│   ├── api/              # Instances Axios et définitions API
+│   ├── components/       # Éléments UI réutilisables (Boutons, Inputs, Sidebar)
+│   ├── pages/            # Vues principales (Login, Dashboard, Budget, Team)
+│   ├── hooks/            # Logique personnalisée (État Auth, Récupération de données)
+│   ├── context/          # Gestion d'état UserContext global
+│   ├── App.jsx           # Configuration principale de routage et de mise en page
+│   └── main.jsx          # Point d'entrée de l'application
+├── tailwind.config.js    # Configuration du système de design
+└── vite.config.js        # Paramètres de l'outil de build
+```
 
-Getting Started
-Prerequisites
+## Démarrage
 
-    Node.js (v18 or higher)
+### Prérequis
 
-    Back-end microservices running on ports 8081 and 8082.
+- Node.js (v18 ou supérieur)
+- Microservices backend fonctionnant sur les ports 8081 et 8082.
 
-Installation
+### Installation
 
-    Navigate to the frontend directory:
-    code Bash
+1. Naviguez vers le répertoire frontend :
+   ```bash
+   cd frontend
+   ```
 
-    cd frontend
+2. Installez les dépendances :
+   ```bash
+   npm install
+   ```
 
-    Install dependencies:
-    code Bash
+3. Lancez le serveur de développement :
+   ```bash
+   npm run dev
+   ```
 
-    npm install
-
-    Launch the development server:
-    code Bash
-
-    npm run dev
-
-    Access the application at http://localhost:5173.
+4. Accédez à l'application sur http://localhost:5173.

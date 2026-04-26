@@ -124,29 +124,6 @@ const UserList = () => {
             </div>
         </div>
     );
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="flex items-center space-x-3">
-                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                                                member.role === 'ADMIN' 
-                                                    ? 'bg-purple-100 text-purple-800' 
-                                                    : 'bg-blue-100 text-blue-800'
-                                            }`}>
-                                                <Shield className="h-3 w-3 mr-1" />
-                                                {member.role}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    );
 };
 
 export default UserList;

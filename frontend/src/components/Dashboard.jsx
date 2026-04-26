@@ -47,17 +47,17 @@ const Dashboard = () => {
   }
 
   const stats = [
-    { name: 'Active Contracts', value: '24', change: '+12%', icon: FileText, color: 'blue' },
-    { name: 'Team Members', value: '8', change: '+2', icon: Users, color: 'green' },
-    { name: 'Pending Reviews', value: '3', change: '-1', icon: Clock, color: 'yellow' },
-    { name: 'Completed', value: '156', change: '+8%', icon: CheckCircle, color: 'purple' },
+    { name: 'Contrats Actifs', value: '24', change: '+12%', icon: FileText, color: 'blue' },
+    { name: 'Membres de l\'Équipe', value: '8', change: '+2', icon: Users, color: 'green' },
+    { name: 'En Attente de Révision', value: '3', change: '-1', icon: Clock, color: 'yellow' },
+    { name: 'Terminés', value: '156', change: '+8%', icon: CheckCircle, color: 'purple' },
   ];
 
   const recentActivity = [
-    { action: 'Contract signed', contract: 'Service Agreement #2024-001', time: '2 hours ago' },
-    { action: 'Review requested', contract: 'NDA Template Update', time: '4 hours ago' },
-    { action: 'New team member', contract: 'Sarah Johnson joined', time: '1 day ago' },
-    { action: 'Contract expired', contract: 'Vendor Agreement #2023-045', time: '2 days ago' },
+    { action: 'Contrat signé', contract: 'Accord de Service #2024-001', time: 'il y a 2 heures' },
+    { action: 'Révision demandée', contract: 'Mise à jour du Modèle NDA', time: 'il y a 4 heures' },
+    { action: 'Nouveau membre d\'équipe', contract: 'Sarah Johnson a rejoint', time: 'il y a 1 jour' },
+    { action: 'Contrat expiré', contract: 'Accord Fournisseur #2023-045', time: 'il y a 2 jours' },
   ];
 
   return (

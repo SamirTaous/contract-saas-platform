@@ -107,7 +107,7 @@ const BudgetDashboard = () => {
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (err) {
       console.error('Failed to upload file:', err);
-      setError('Failed to upload Excel file. Please check the format and try again.');
+      setError('Échec du téléchargement du fichier Excel. Veuillez vérifier le format et réessayer.');
     } finally {
       setUploading(false);
     }
@@ -158,7 +158,7 @@ const BudgetDashboard = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading budget data...</p>
+          <p className="text-gray-600">Chargement des données budgétaires...</p>
         </div>
       </div>
     );
@@ -169,13 +169,13 @@ const BudgetDashboard = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Accès Refusé</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate('/dashboard')}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Return to Dashboard
+            Retour au Tableau de Bord
           </button>
         </div>
       </div>
@@ -263,7 +263,7 @@ const BudgetDashboard = () => {
                 )}
                 <div>
                   <p className="text-lg font-medium text-gray-900">
-                    {uploading ? 'Traitement...' : 'Déposez le fichier Excel ici ou cliquez pour parcourir'}
+                    {uploading ? 'Traitement en cours...' : 'Déposez le fichier Excel ici ou cliquez pour parcourir'}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
                     Prend en charge les fichiers .xlsx et .xls

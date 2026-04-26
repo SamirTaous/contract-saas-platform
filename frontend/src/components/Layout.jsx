@@ -269,7 +269,7 @@ const Layout = ({ children }) => {
               <Menu className="h-5 w-5" />
             </button>
             <div className="flex items-center space-x-3">
-              <span className="text-lg font-semibold text-gray-900">Dashboard</span>
+              <span className="text-lg font-semibold text-gray-900">Tableau de Bord</span>
             </div>
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
@@ -281,7 +281,7 @@ const Layout = ({ children }) => {
             <div className="absolute inset-0 bg-gray-50 flex items-center justify-center z-10">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600 text-sm">Loading...</p>
+                <p className="text-gray-600 text-sm">Chargement...</p>
               </div>
             </div>
           ) : (
