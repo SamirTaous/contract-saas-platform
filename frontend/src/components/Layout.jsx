@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
   Building2, 
   Users, 
@@ -11,32 +11,24 @@ import {
   X,
   Home,
   ChevronDown,
-  ChevronRight
+  Building
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { setupApiInterceptors } from '../utils/apiInterceptors';
 import axios from 'axios';
 
 // Create API instance for organizations
-const orgApi = axios.create({
+const orgApi = setupApiInterceptors(axios.create({
   baseURL: 'http://localhost:8081/api'
-});
-
-// Add interceptor for authentication
-orgApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+}));
 
 const Layout = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const [organization, setOrganization] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
 
   // Track route changes for loading state
@@ -50,18 +42,10 @@ const Layout = ({ children }) => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (!token || !userData) {
-      navigate('/auth');
-      return;
+    if (user) {
+      fetchOrganizationInfo(user);
     }
-    
-    const parsedUser = JSON.parse(userData);
-    setUser(parsedUser);
-    fetchOrganizationInfo(parsedUser);
-  }, [navigate]);
+  }, [user]);
 
   const fetchOrganizationInfo = async (userData) => {
     try {
@@ -83,36 +67,41 @@ const Layout = ({ children }) => {
   };
 
   const handleSignOut = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/auth');
+    logout();
   };
 
   const navigation = [
     { 
-      name: 'Dashboard', 
+      name: 'Tableau de Bord', 
       href: '/dashboard', 
       icon: Home,
-      description: 'Overview and analytics'
+      description: 'Vue d\'ensemble et analyses'
     },
     { 
-      name: 'Team Members', 
+      name: 'Membres de l\'Équipe', 
       href: '/users', 
       icon: Users,
-      description: 'Manage your team'
+      description: 'Gérer votre équipe'
     },
     { 
-      name: 'Budget Management', 
+      name: 'Gestion Budgétaire', 
       href: '/budget', 
       icon: DollarSign, 
       adminOnly: true,
       description: 'Service Comptabilité'
     },
     { 
-      name: 'Settings', 
+      name: 'Marchés Publics', 
+      href: '/markets', 
+      icon: Building, 
+      adminOnly: true,
+      description: 'Service Marché'
+    },
+    { 
+      name: 'Paramètres', 
       href: '/settings', 
       icon: Settings,
-      description: 'System configuration'
+      description: 'Configuration système'
     },
   ];
 
@@ -174,7 +163,7 @@ const Layout = ({ children }) => {
               <button
                 onClick={handleSignOut}
                 className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                title="Sign out"
+                title="Se déconnecter"
               >
                 <LogOut className="h-4 w-4" />
               </button>
@@ -205,7 +194,7 @@ const Layout = ({ children }) => {
                     {organization.name}
                   </p>
                   <p className="text-xs text-gray-500 truncate">
-                    {organization.type || 'Workspace'}
+                    {organization.type || 'Espace de travail'}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, Building, Key, Building2 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../api';
 
 // Move components outside to prevent re-creation on every render
@@ -48,6 +49,7 @@ const PasswordField = ({ placeholder, value, onChange, showPassword, onTogglePas
 );
 
 const AuthForm = () => {
+  const { login, isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isNewOrg, setIsNewOrg] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -61,6 +63,15 @@ const AuthForm = () => {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const from = location.state?.from || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location.state]);
 
   const handleInputChange = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -80,13 +91,14 @@ const AuthForm = () => {
         password: formData.password
       });
       
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      // Use auth context login method
+      login(res.data.token, res.data.user);
       
-      // Redirect to dashboard
-      navigate('/dashboard');
+      // Redirect to the page they were trying to access or dashboard
+      const from = location.state?.from || '/dashboard';
+      navigate(from, { replace: true });
     } catch (err) {
-      alert("Error: " + (err.response?.data || "Login failed"));
+      alert("Erreur: " + (err.response?.data || "Échec de la connexion"));
     } finally {
       setLoading(false);
     }
@@ -110,7 +122,7 @@ const AuthForm = () => {
 
     try {
       const res = await api.post('/auth/register', payload);
-      alert("Registration successful! Please login with your credentials.");
+      alert("Inscription réussie ! Veuillez vous connecter avec vos identifiants.");
       setIsLogin(true);
       // Clear form
       setFormData({
@@ -121,7 +133,7 @@ const AuthForm = () => {
         inviteCode: ''
       });
     } catch (err) {
-      alert("Error: " + (err.response?.data || "Registration failed"));
+      alert("Erreur: " + (err.response?.data || "Échec de l'inscription"));
     } finally {
       setLoading(false);
     }

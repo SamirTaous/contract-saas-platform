@@ -41,5 +41,6 @@ temp/
 **/node_modules/
 **/dist/
 **/build/
+**/.vite/
 .eslintcache
 npm-debug.log*

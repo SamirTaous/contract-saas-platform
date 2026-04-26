@@ -13,18 +13,12 @@ import {
   Eye
 } from 'lucide-react';
 import axios from 'axios';
+import { setupApiInterceptors } from '../utils/apiInterceptors';
+import { formatCurrency } from '../utils/currency';
 
-const budgetApi = axios.create({
+const budgetApi = setupApiInterceptors(axios.create({
   baseURL: 'http://localhost:8082/api/budget'
-});
-
-budgetApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+}));
 
 const BudgetDashboard = () => {
   const [user, setUser] = useState(null);
@@ -52,7 +46,7 @@ const BudgetDashboard = () => {
     setUser(parsedUser);
     
     if (!['ADMIN', 'SUPER_ADMIN'].includes(parsedUser.role)) {
-      setError('Access Denied: You need administrator privileges to access the Budget Management Dashboard.');
+      setError('Accès Refusé: Vous avez besoin de privilèges administrateur pour accéder au Tableau de Bord de Gestion Budgétaire.');
       setLoading(false);
       return;
     }
@@ -69,7 +63,7 @@ const BudgetDashboard = () => {
       setError(null);
     } catch (err) {
       console.error('Failed to fetch budget data:', err);
-      setError('Failed to load budget data. Please try again.');
+      setError('Échec du chargement des données budgétaires. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }

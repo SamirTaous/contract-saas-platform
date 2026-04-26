@@ -17,18 +17,11 @@ import {
   X
 } from 'lucide-react';
 import axios from 'axios';
+import { setupApiInterceptors } from '../utils/apiInterceptors';
 
-const budgetApi = axios.create({
+const budgetApi = setupApiInterceptors(axios.create({
   baseURL: 'http://localhost:8082/api/budget'
-});
-
-budgetApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+}));
 
 const BudgetLineDetails = () => {
   const { id } = useParams();

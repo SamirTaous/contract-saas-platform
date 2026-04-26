@@ -1,16 +1,8 @@
 import axios from 'axios';
+import { setupApiInterceptors } from './utils/apiInterceptors';
 
-const api = axios.create({
+const api = setupApiInterceptors(axios.create({
     baseURL: 'http://localhost:8081/api', // Auth Service Port
-});
-
-// This automatically adds the JWT to every request
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+}));
 
 export default api;
