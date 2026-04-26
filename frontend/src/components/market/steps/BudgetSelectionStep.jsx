@@ -183,7 +183,7 @@ const BudgetSelectionStep = ({ formData, setFormData, formErrors, budgetLines })
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
                   formErrors.totalAmount ? 'border-red-300 bg-red-50' : 'border-gray-300'
                 }`}
-                placeholder="0,00"
+                placeholder="0,00 MAD"
                 disabled={!selectedBudgetLine}
               />
             </div>

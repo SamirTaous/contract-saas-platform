@@ -131,9 +131,9 @@ const BudgetDashboard = () => {
   }, [filterBudgetLines]);
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat('fr-MA', {
       style: 'currency',
-      currency: 'EUR'
+      currency: 'MAD'
     }).format(amount || 0);
   };
 

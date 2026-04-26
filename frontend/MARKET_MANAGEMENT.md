@@ -28,9 +28,9 @@ The MarketManagement component provides a comprehensive interface for managing p
 - **Actions**: "Approve & Sign" button for DRAFT status markets
 
 ### 4. Currency Support
-- **Primary**: Euro (EUR) formatting
-- **Secondary**: Moroccan Dirham (MAD) display
-- **Formatting**: Uses `Intl.NumberFormat` for proper localization
+- **Primary**: Moroccan Dirham (MAD) formatting
+- **Formatting**: Uses `Intl.NumberFormat` with 'fr-MA' locale for proper localization
+- **Display**: All monetary values are shown in MAD throughout the application
 
 ## API Integration
 
