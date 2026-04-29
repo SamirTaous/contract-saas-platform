@@ -3,6 +3,7 @@ import AuthForm from './components/AuthForm';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import UserList from './components/UserList';
+import BudgetTable from './components/BudgetTable';
 import BudgetDashboard from './components/BudgetDashboard';
 import BudgetLineDetails from './components/BudgetLineDetails';
 import MarketManagement from './components/MarketManagement';
@@ -20,7 +21,8 @@ function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="users" element={<UserList />} />
-            <Route path="budget" element={<BudgetDashboard />} />
+            <Route path="budget" element={<BudgetTable />} />
+            <Route path="budget/analytics" element={<BudgetDashboard />} />
             <Route path="budget/line/:id" element={<BudgetLineDetails />} />
             <Route path="markets" element={<MarketManagement />} />
           </Route>

@@ -11,7 +11,10 @@ import {
   X,
   Home,
   ChevronDown,
-  Building
+  ChevronRight,
+  Building,
+  FileText,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
@@ -29,6 +32,7 @@ const Layout = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
+  const [budgetSubmenuOpen, setBudgetSubmenuOpen] = useState(false);
   const location = useLocation();
 
   // Track route changes for loading state
@@ -37,6 +41,11 @@ const Layout = ({ children }) => {
     const timer = setTimeout(() => {
       setPageLoading(false);
     }, 300); // Short loading time for smooth transition
+
+    // Auto-open budget submenu if on budget pages
+    if (location.pathname.startsWith('/budget')) {
+      setBudgetSubmenuOpen(true);
+    }
 
     return () => clearTimeout(timer);
   }, [location.pathname]);
@@ -85,10 +94,24 @@ const Layout = ({ children }) => {
     },
     { 
       name: 'Gestion Budgétaire', 
-      href: '/budget', 
       icon: DollarSign, 
       adminOnly: true,
-      description: 'Service Comptabilité'
+      description: 'Service Comptabilité',
+      hasSubmenu: true,
+      submenu: [
+        {
+          name: 'Lignes Budgétaires',
+          href: '/budget',
+          icon: FileText,
+          description: 'Tableau des lignes budgétaires'
+        },
+        {
+          name: 'Analyses & Graphiques',
+          href: '/budget/analytics',
+          icon: BarChart3,
+          description: 'Visualisations et analyses'
+        }
+      ]
     },
     { 
       name: 'Marchés Publics', 
@@ -218,6 +241,86 @@ const Layout = ({ children }) => {
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
           {filteredNavigation.map((item) => {
             const Icon = item.icon;
+            
+            // Handle items with submenu
+            if (item.hasSubmenu) {
+              const isActive = location.pathname.startsWith('/budget');
+              
+              return (
+                <div key={item.name}>
+                  <button
+                    onClick={() => setBudgetSubmenuOpen(!budgetSubmenuOpen)}
+                    className={`group flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Icon className={`h-5 w-5 flex-shrink-0 ${
+                        isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
+                      }`} />
+                      <div className="flex-1 min-w-0 text-left">
+                        <span className="truncate">{item.name}</span>
+                        {item.description && (
+                          <p className={`text-xs truncate ${
+                            isActive ? 'text-blue-600' : 'text-gray-500'
+                          }`}>
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className={`h-4 w-4 transition-transform ${
+                      budgetSubmenuOpen ? 'rotate-90' : ''
+                    } ${isActive ? 'text-blue-700' : 'text-gray-400'}`} />
+                  </button>
+                  
+                  {/* Submenu */}
+                  {budgetSubmenuOpen && (
+                    <div className="mt-1 ml-8 space-y-1">
+                      {item.submenu.map((subItem) => {
+                        const SubIcon = subItem.icon;
+                        return (
+                          <NavLink
+                            key={subItem.name}
+                            to={subItem.href}
+                            onClick={() => setSidebarOpen(false)}
+                            className={({ isActive }) =>
+                              `group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                isActive
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                              }`
+                            }
+                          >
+                            {({ isActive }) => (
+                              <div className="flex items-center space-x-3 w-full">
+                                <SubIcon className={`h-4 w-4 flex-shrink-0 ${
+                                  isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
+                                }`} />
+                                <div className="flex-1 min-w-0">
+                                  <span className="truncate">{subItem.name}</span>
+                                  {subItem.description && (
+                                    <p className={`text-xs truncate ${
+                                      isActive ? 'text-blue-600' : 'text-gray-500'
+                                    }`}>
+                                      {subItem.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </NavLink>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            
+            // Handle regular navigation items
             return (
               <NavLink
                 key={item.name}

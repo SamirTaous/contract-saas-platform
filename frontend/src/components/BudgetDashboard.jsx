@@ -1,155 +1,203 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Upload, 
-  Search, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  BarChart3,
+  TrendingUp,
   TrendingDown,
-  FileSpreadsheet,
-  AlertCircle,
+  DollarSign,
+  AlertTriangle,
   CheckCircle,
+  PieChart,
+  Activity,
+  Calendar,
   Filter,
-  Eye
+  Download,
+  RefreshCw
 } from 'lucide-react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
-import { formatCurrency } from '../utils/currency';
-import { designSystem } from '../styles/designSystem';
-import PageHeader from './ui/PageHeader';
-import StatCard from './ui/StatCard';
-import Button from './ui/Button';
-import Card from './ui/Card';
+import BudgetComparison from './BudgetComparison';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const budgetApi = setupApiInterceptors(axios.create({
   baseURL: 'http://localhost:8082/api/budget'
 }));
 
 const BudgetDashboard = () => {
-  const [user, setUser] = useState(null);
-  const [budgetLines, setBudgetLines] = useState([]);
-  const [filteredLines, setFilteredLines] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('ALL');
-  const [error, setError] = useState(null);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  
   const navigate = useNavigate();
+  const [budgetLines, setBudgetLines] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedPeriod, setSelectedPeriod] = useState('current');
+  const [selectedType, setSelectedType] = useState('all');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (!token || !userData) {
-      navigate('/auth');
-      return;
-    }
-    
-    const parsedUser = JSON.parse(userData);
-    setUser(parsedUser);
-    
-    if (!['ADMIN', 'SUPER_ADMIN'].includes(parsedUser.role)) {
-      setError('Accès Refusé: Vous avez besoin de privilèges administrateur pour accéder au Tableau de Bord de Gestion Budgétaire.');
-      setLoading(false);
-      return;
-    }
-    
     fetchBudgetData();
-  }, [navigate]);
+  }, []);
 
   const fetchBudgetData = async () => {
     try {
       setLoading(true);
-      const response = await budgetApi.get('/all');
-      setBudgetLines(response.data);
-      setFilteredLines(response.data);
       setError(null);
+      const response = await budgetApi.get('/all');
+      
+      // Use only real data from backend - no mock data at all
+      const enhancedData = response.data.map((line, index) => ({
+        ...line,
+        id: index,
+        // Use real committedAmount and spentAmount from backend only
+        committedAmount: line.committedAmount || 0,
+        spentAmount: line.spentAmount || 0,
+        // Only add fields that don't exist in backend
+        createdDate: line.createdDate || new Date().toISOString().split('T')[0],
+        lastModified: line.lastModified || new Date().toISOString().split('T')[0],
+        status: line.status || 'active'
+      }));
+      
+      setBudgetLines(enhancedData);
     } catch (err) {
       console.error('Failed to fetch budget data:', err);
-      setError('Échec du chargement des données budgétaires. Veuillez réessayer.');
+      setError('Impossible de charger les données budgétaires');
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateSummary = () => {
-    const totalBudget = budgetLines.reduce((sum, line) => sum + (line.initialAmount || 0), 0);
-    const totalCommitted = budgetLines.reduce((sum, line) => sum + (line.committedAmount || 0), 0);
-    const remainingBalance = totalBudget - totalCommitted;
-    
-    return {
-      totalBudget,
-      totalCommitted,
-      remainingBalance
-    };
-  };
-
-  const handleFileUpload = async (file) => {
-    if (!file) return;
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-      setUploading(true);
-      setUploadSuccess(false);
-      await budgetApi.post('/import', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      
-      setUploadSuccess(true);
-      await fetchBudgetData();
-      
-      setTimeout(() => setUploadSuccess(false), 3000);
-    } catch (err) {
-      console.error('Failed to upload file:', err);
-      setError('Échec du téléchargement du fichier Excel. Veuillez vérifier le format et réessayer.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const filterBudgetLines = useCallback(() => {
-    let filtered = budgetLines;
-    
-    if (searchTerm) {
-      filtered = filtered.filter(line => 
-        line.article?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        line.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        line.fullCode?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    if (typeFilter !== 'ALL') {
-      filtered = filtered.filter(line => line.type === typeFilter);
-    }
-    
-    setFilteredLines(filtered);
-  }, [budgetLines, searchTerm, typeFilter]);
-
-  useEffect(() => {
-    filterBudgetLines();
-  }, [filterBudgetLines]);
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-MA', {
       style: 'currency',
-      currency: 'MAD'
+      currency: 'MAD',
+      minimumFractionDigits: 0
     }).format(amount || 0);
   };
 
-  const getTypeBadgeColor = (type) => {
-    switch (type) {
-      case 'MDD':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'INV':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+  // Calculate summary statistics
+  const totalBudget = budgetLines.reduce((sum, line) => sum + (line.initialAmount || 0), 0);
+  const totalCommitted = budgetLines.reduce((sum, line) => sum + (line.committedAmount || 0), 0);
+  const totalRemaining = totalBudget - totalCommitted;
+  const utilizationRate = totalBudget > 0 ? (totalCommitted / totalBudget) * 100 : 0;
+
+  // Filter budget lines
+  const filteredLines = budgetLines.filter(line => {
+    if (selectedType !== 'all' && line.type !== selectedType) return false;
+    return true;
+  });
+
+  // Chart data for budget overview
+  const overviewChartData = {
+    labels: ['Budget Total', 'Engagé', 'Disponible'],
+    datasets: [
+      {
+        label: 'Montants (MAD)',
+        data: [totalBudget, totalCommitted, totalRemaining],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.8)',
+          'rgba(245, 158, 11, 0.8)',
+          'rgba(34, 197, 94, 0.8)'
+        ],
+        borderColor: [
+          'rgb(59, 130, 246)',
+          'rgb(245, 158, 11)',
+          'rgb(34, 197, 94)'
+        ],
+        borderWidth: 1
+      }
+    ]
+  };
+
+  // Chart data for utilization by type
+  const typeUtilizationData = {
+    labels: ['MDD', 'INV'],
+    datasets: [
+      {
+        data: [
+          budgetLines.filter(l => l.type === 'MDD').reduce((sum, l) => sum + (l.committedAmount || 0), 0),
+          budgetLines.filter(l => l.type === 'INV').reduce((sum, l) => sum + (l.committedAmount || 0), 0)
+        ],
+        backgroundColor: [
+          'rgba(34, 197, 94, 0.8)',
+          'rgba(59, 130, 246, 0.8)'
+        ],
+        borderColor: [
+          'rgb(34, 197, 94)',
+          'rgb(59, 130, 246)'
+        ],
+        borderWidth: 2
+      }
+    ]
+  };
+
+  // Top budget lines by utilization
+  const topLines = [...filteredLines]
+    .sort((a, b) => {
+      const aUtil = a.initialAmount > 0 ? (a.committedAmount / a.initialAmount) * 100 : 0;
+      const bUtil = b.initialAmount > 0 ? (b.committedAmount / b.initialAmount) * 100 : 0;
+      return bUtil - aUtil;
+    })
+    .slice(0, 5);
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 20
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)'
+        },
+        ticks: {
+          callback: function(value) {
+            return formatCurrency(value);
+          }
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        }
+      }
     }
   };
 
@@ -158,256 +206,314 @@ const BudgetDashboard = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des données budgétaires...</p>
+          <p className="text-gray-600">Chargement du tableau de bord...</p>
         </div>
       </div>
     );
   }
 
-  if (error && error.includes('Access Denied')) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Accès Refusé</h2>
+          <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Erreur</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={fetchBudgetData}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Retour au Tableau de Bord
+            Réessayer
           </button>
         </div>
       </div>
     );
   }
 
-  const summary = calculateSummary();
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className={designSystem.layout.container}>
-        <div className={designSystem.layout.section}>
-          <PageHeader
-            title="Gestion Budgétaire"
-            subtitle="Service Comptabilité - Gérer le budget de votre organisation"
-            icon={DollarSign}
-          />
-          
-          {error && !error.includes('Access Denied') && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-              <p className="text-red-700 flex-1">{error}</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord Budgétaire</h1>
+              <p className="text-gray-600 mt-2">Vue d'ensemble et analyses des lignes budgétaires</p>
+            </div>
+            
+            <div className="flex items-center space-x-3">
               <button
-                onClick={() => setError(null)}
-                className="text-red-500 hover:text-red-700 transition-colors"
+                onClick={fetchBudgetData}
+                className="flex items-center space-x-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                ×
+                <RefreshCw className="h-4 w-4" />
+                <span>Actualiser</span>
+              </button>
+              
+              <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                <Download className="h-4 w-4" />
+                <span>Exporter</span>
               </button>
             </div>
-          )}
+          </div>
+        </div>
 
-          {uploadSuccess && (
-            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3">
-              <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-              <p className="text-green-700">Fichier Excel téléchargé et traité avec succès!</p>
+        {/* Filters */}
+        <div className="mb-8 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">Filtres:</span>
             </div>
-          )}
+            
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="current">Période Actuelle</option>
+              <option value="previous">Période Précédente</option>
+              <option value="ytd">Année en Cours</option>
+            </select>
+            
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">Tous les Types</option>
+              <option value="MDD">MDD</option>
+              <option value="INV">INV</option>
+            </select>
+          </div>
+        </div>
 
-          {/* Summary Stats */}
-          <div className={`${designSystem.layout.grid.cols3} ${designSystem.layout.grid.gap} mb-8`}>
-            <StatCard
-              label="Budget Total"
-              value={formatCurrency(summary.totalBudget)}
-              icon={DollarSign}
-              color="blue"
-            />
-            <StatCard
-              label="Total Engagé"
-              value={formatCurrency(summary.totalCommitted)}
-              icon={TrendingUp}
-              color="orange"
-            />
-            <StatCard
-              label="Solde Restant"
-              value={formatCurrency(summary.remainingBalance)}
-              icon={summary.remainingBalance >= 0 ? TrendingUp : TrendingDown}
-              color={summary.remainingBalance >= 0 ? "green" : "red"}
-            />
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm border border-blue-200 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-700 mb-1">Budget Total</p>
+                <p className="text-2xl font-bold text-blue-900 truncate">
+                  {formatCurrency(totalBudget)}
+                </p>
+                <div className="flex items-center mt-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  <span className="text-xs text-blue-600">Montant alloué</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-sm">
+                <DollarSign className="h-6 w-6 text-white" />
+              </div>
+            </div>
           </div>
 
-          {/* Import Section */}
-          <Card
-            title="Importer des Données Budgétaires"
-            className="mb-8"
-          >
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={(e) => handleFileUpload(e.target.files[0])}
-                className="hidden"
-                id="file-upload"
-                disabled={uploading}
-              />
-              <label
-                htmlFor="file-upload"
-                className="cursor-pointer flex flex-col items-center space-y-4"
-              >
-                {uploading ? (
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                ) : (
-                  <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <Upload className="h-6 w-6 text-blue-600" />
-                  </div>
-                )}
-                <div>
-                  <p className="text-lg font-medium text-gray-900">
-                    {uploading ? 'Traitement en cours...' : 'Déposez le fichier Excel ici ou cliquez pour parcourir'}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Prend en charge les fichiers .xlsx et .xls
-                  </p>
-                </div>
-              </label>
-            </div>
-          </Card>
-
-          {/* Budget Lines Table */}
-          <Card
-            title="Lignes Budgétaires"
-            action={
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher par article, libellé ou code..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
-                  />
-                </div>
-                
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="ALL">Tous les Types</option>
-                  <option value="MDD">MDD</option>
-                  <option value="INV">INV</option>
-                </select>
-              </div>
-            }
-            padding={false}
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Code Complet
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Article
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Paragraphe
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ligne
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Libellé
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Montant Initial
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredLines.length === 0 ? (
-                    <tr>
-                      <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
-                        <FileSpreadsheet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-lg font-medium">Aucune ligne budgétaire trouvée</p>
-                        <p className="text-sm">
-                          {budgetLines.length === 0 
-                            ? 'Importez un fichier Excel pour commencer' 
-                            : 'Essayez d\'ajuster vos critères de recherche ou de filtre'
-                          }
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredLines.map((line, filteredIndex) => {
-                      // Create a unique identifier from the budget line data
-                      const uniqueId = `${line.fullCode}-${line.article}-${line.paragraph}-${line.line}`.replace(/\s+/g, '-');
-                      
-                      return (
-                        <tr 
-                          key={filteredIndex} 
-                          className="hover:bg-blue-50 transition-colors cursor-pointer border-l-4 border-transparent hover:border-blue-500"
-                          onClick={() => navigate(`/budget/line/${encodeURIComponent(uniqueId)}`, { 
-                            state: { budgetLine: line } 
-                          })}
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                            {line.fullCode}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeBadgeColor(line.type)}`}>
-                              {line.type}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {line.article}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {line.paragraph}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {line.line}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                            {line.label}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                            {formatCurrency(line.initialAmount)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              icon={Eye}
-                            >
-                              Voir
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {filteredLines.length > 0 && (
-              <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-                <p className="text-sm text-gray-700">
-                  Affichage de {filteredLines.length} sur {budgetLines.length} lignes budgétaires
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm border border-orange-200 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-orange-700 mb-1">Montant Engagé</p>
+                <p className="text-2xl font-bold text-orange-900 truncate">
+                  {formatCurrency(totalCommitted)}
                 </p>
+                <div className="flex items-center mt-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                  <span className="text-xs text-orange-600">Dépenses actuelles</span>
+                </div>
               </div>
-            )}
-          </Card>
+              <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-sm">
+                <TrendingUp className="h-6 w-6 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm border border-green-200 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-700 mb-1">Disponible</p>
+                <p className="text-2xl font-bold text-green-900 truncate">
+                  {formatCurrency(totalRemaining)}
+                </p>
+                <div className="flex items-center mt-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-xs text-green-600">Solde restant</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-sm">
+                <CheckCircle className="h-6 w-6 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div className={`bg-gradient-to-br rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow ${
+            utilizationRate > 90 ? 'from-red-50 to-red-100 border-red-200' :
+            utilizationRate > 75 ? 'from-yellow-50 to-yellow-100 border-yellow-200' : 
+            'from-emerald-50 to-emerald-100 border-emerald-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className={`text-sm font-medium mb-1 ${
+                  utilizationRate > 90 ? 'text-red-700' :
+                  utilizationRate > 75 ? 'text-yellow-700' : 'text-emerald-700'
+                }`}>Taux d'Utilisation</p>
+                <p className={`text-2xl font-bold ${
+                  utilizationRate > 90 ? 'text-red-900' :
+                  utilizationRate > 75 ? 'text-yellow-900' : 'text-emerald-900'
+                }`}>
+                  {utilizationRate.toFixed(1)}%
+                </p>
+                <div className="flex items-center mt-2">
+                  <div className={`w-2 h-2 rounded-full mr-2 ${
+                    utilizationRate > 90 ? 'bg-red-500' :
+                    utilizationRate > 75 ? 'bg-yellow-500' : 'bg-emerald-500'
+                  }`}></div>
+                  <span className={`text-xs ${
+                    utilizationRate > 90 ? 'text-red-600' :
+                    utilizationRate > 75 ? 'text-yellow-600' : 'text-emerald-600'
+                  }`}>
+                    {utilizationRate > 90 ? 'Critique' :
+                     utilizationRate > 75 ? 'Attention' : 'Optimal'}
+                  </span>
+                </div>
+              </div>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
+                utilizationRate > 90 ? 'bg-red-500' :
+                utilizationRate > 75 ? 'bg-yellow-500' : 'bg-emerald-500'
+              }`}>
+                <Activity className="h-6 w-6 text-white" />
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 mb-8">
+          {/* Budget Overview Chart */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <span>Aperçu Budgétaire</span>
+            </h3>
+            <div className="h-64">
+              <Bar data={overviewChartData} options={chartOptions} />
+            </div>
+          </div>
+
+          {/* Utilization by Type */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+              <PieChart className="h-5 w-5 text-blue-600" />
+              <span>Utilisation par Type</span>
+            </h3>
+            <div className="h-64">
+              <Doughnut data={typeUtilizationData} options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: 'bottom',
+                    labels: {
+                      usePointStyle: true,
+                      padding: 20,
+                      font: {
+                        size: 12
+                      }
+                    }
+                  },
+                  tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: 'white',
+                    bodyColor: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    callbacks: {
+                      label: function(context) {
+                        return `${context.label}: ${formatCurrency(context.parsed)}`;
+                      }
+                    }
+                  }
+                },
+                // Remove scales to hide numbers on the chart
+                elements: {
+                  arc: {
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                  }
+                },
+                cutout: '60%'
+              }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Top Budget Lines */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <span>Top 5 - Lignes les Plus Utilisées</span>
+          </h3>
+          
+          <div className="space-y-3">
+            {topLines.map((line, index) => {
+              const utilization = line.initialAmount > 0 ? (line.committedAmount / line.initialAmount) * 100 : 0;
+              const remaining = (line.initialAmount || 0) - (line.committedAmount || 0);
+              
+              return (
+                <div
+                  key={line.id}
+                  className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 cursor-pointer transition-all duration-200 hover:shadow-sm"
+                  onClick={() => navigate(`/budget/line/${line.id}`, { state: { budgetLine: line } })}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+                      <span className="text-sm font-bold text-white">{index + 1}</span>
+                    </div>
+                    
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-medium text-gray-900 truncate">{line.fullCode}</h4>
+                      <p className="text-sm text-gray-600 truncate">{line.label || 'Aucune description'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-6">
+                    <div className="text-right min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {formatCurrency(line.committedAmount)} / {formatCurrency(line.initialAmount)}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        Restant: {formatCurrency(remaining)}
+                      </p>
+                    </div>
+                    
+                    <div className="w-24 flex-shrink-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-gray-500">Utilisation</span>
+                        <span className={`text-xs font-medium ${
+                          utilization > 90 ? 'text-red-600' :
+                          utilization > 75 ? 'text-yellow-600' : 'text-green-600'
+                        }`}>
+                          {utilization.toFixed(0)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            utilization > 90 ? 'bg-red-500' :
+                            utilization > 75 ? 'bg-yellow-500' : 'bg-green-500'
+                          }`}
+                          style={{ width: `${Math.min(utilization, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Budget Comparison */}
+        <BudgetComparison availableBudgetLines={budgetLines} />
       </div>
     </div>
   );

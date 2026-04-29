@@ -14,10 +14,15 @@ import {
   CheckCircle,
   Edit,
   Save,
-  X
+  X,
+  BarChart3,
+  Activity
 } from 'lucide-react';
 import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
+import BudgetCharts from './BudgetCharts';
+import BudgetAnalytics from './BudgetAnalytics';
+import RealTimeChart from './RealTimeChart';
 
 const budgetApi = setupApiInterceptors(axios.create({
   baseURL: 'http://localhost:8082/api/budget'
@@ -32,17 +37,22 @@ const BudgetLineDetails = () => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedLine, setEditedLine] = useState({});
+  const [activeTab, setActiveTab] = useState('details');
 
   useEffect(() => {
     // Check if budget line data was passed via navigation state
     if (location.state?.budgetLine) {
       const line = location.state.budgetLine;
+      // Use real data from backend - no mock data
       const enhancedLine = {
         ...line,
         id: id,
-        committedAmount: line.initialAmount ? line.initialAmount * 0.3 : 0, // Mock 30% committed
-        createdDate: new Date().toISOString().split('T')[0],
-        lastModified: new Date().toISOString().split('T')[0]
+        // Use real committedAmount and spentAmount from backend
+        committedAmount: line.committedAmount || 0,
+        spentAmount: line.spentAmount || 0,
+        // Only add missing fields if they don't exist
+        createdDate: line.createdDate || new Date().toISOString().split('T')[0],
+        lastModified: line.lastModified || new Date().toISOString().split('T')[0]
       };
       setBudgetLine(enhancedLine);
       setEditedLine(enhancedLine);
@@ -72,13 +82,16 @@ const BudgetLineDetails = () => {
         const line = budgetLines[lineIndex];
         console.log('Found budget line:', line);
 
-        // Add some mock additional data for demonstration
+        // Use real data from backend - no mock data
         const enhancedLine = {
           ...line,
           id: lineIndex,
-          committedAmount: line.initialAmount ? line.initialAmount * 0.3 : 0, // Mock 30% committed
-          createdDate: new Date().toISOString().split('T')[0],
-          lastModified: new Date().toISOString().split('T')[0]
+          // Use real committedAmount and spentAmount from backend
+          committedAmount: line.committedAmount || 0,
+          spentAmount: line.spentAmount || 0,
+          // Only add missing fields if they don't exist
+          createdDate: line.createdDate || new Date().toISOString().split('T')[0],
+          lastModified: line.lastModified || new Date().toISOString().split('T')[0]
         };
         setBudgetLine(enhancedLine);
         setEditedLine(enhancedLine);
@@ -193,6 +206,7 @@ const BudgetLineDetails = () => {
 
   const utilization = calculateUtilization();
   const remainingAmount = (budgetLine.initialAmount || 0) - (budgetLine.committedAmount || 0);
+  const availableAmount = (budgetLine.initialAmount || 0) - (budgetLine.spentAmount || 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -246,279 +260,412 @@ const BudgetLineDetails = () => {
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Main Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information Card */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  <span>Informations de Base</span>
-                </h2>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getTypeBadgeColor(budgetLine.type)}`}>
-                  {budgetLine.type}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Code Complet</label>
-                    <div className="flex items-center space-x-2">
-                      <Hash className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-mono bg-gray-50 px-3 py-2 rounded-lg border">
-                        {budgetLine.fullCode}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Article</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedLine.article || ''}
-                        onChange={(e) => setEditedLine({ ...editedLine, article: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    ) : (
-                      <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg border">
-                        {budgetLine.article || 'N/A'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Paragraphe</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedLine.paragraph || ''}
-                        onChange={(e) => setEditedLine({ ...editedLine, paragraph: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    ) : (
-                      <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg border">
-                        {budgetLine.paragraph || 'N/A'}
-                      </p>
-                    )}
-                  </div>
+        {/* Navigation Tabs */}
+        <div className="mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('details')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'details'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-4 w-4" />
+                  <span>Détails</span>
                 </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ligne</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedLine.line || ''}
-                        onChange={(e) => setEditedLine({ ...editedLine, line: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    ) : (
-                      <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg border">
-                        {budgetLine.line || 'N/A'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                    {isEditing ? (
-                      <select
-                        value={editedLine.type || ''}
-                        onChange={(e) => setEditedLine({ ...editedLine, type: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="MDD">MDD</option>
-                        <option value="INV">INV</option>
-                      </select>
-                    ) : (
-                      <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg border">
-                        {budgetLine.type}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                    <div className="flex items-center space-x-2">
-                      {remainingAmount >= 0 ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <AlertCircle className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className={`text-sm font-medium ${remainingAmount >= 0 ? 'text-green-700' : 'text-red-700'
-                        }`}>
-                        {remainingAmount >= 0 ? 'Dans le Budget' : 'Hors Budget'}
-                      </span>
-                    </div>
-                  </div>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('charts')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'charts'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>Graphiques</span>
                 </div>
-              </div>
-            </div>
-
-            {/* Description Card */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-                <Building className="h-5 w-5 text-blue-600" />
-                <span>Description et Libellé</span>
-              </h2>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Libellé</label>
-                {isEditing ? (
-                  <textarea
-                    value={editedLine.label || ''}
-                    onChange={(e) => setEditedLine({ ...editedLine, label: e.target.value })}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Entrez la description de la ligne budgétaire..."
-                  />
-                ) : (
-                  <div className="bg-gray-50 border rounded-lg p-4">
-                    <p className="text-gray-900 whitespace-pre-wrap">
-                      {budgetLine.label || 'Aucune description disponible'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('realtime')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'realtime'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Activity className="h-4 w-4" />
+                  <span>Temps Réel</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'analytics'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <TrendingUp className="h-4 w-4" />
+                  <span>Analyses</span>
+                </div>
+              </button>
+            </nav>
           </div>
+        </div>
 
-          {/* Right Column - Financial Summary */}
-          <div className="space-y-6">
-            {/* Financial Overview Card */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center space-x-2">
-                <DollarSign className="h-5 w-5 text-blue-600" />
-                <span>Aperçu Financier</span>
-              </h2>
-
-              <div className="space-y-6">
-                {/* Initial Amount */}
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-700">Budget Initial</p>
-                      <p className="text-2xl font-bold text-blue-900 mt-1">
-                        {formatCurrency(budgetLine.initialAmount)}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <DollarSign className="h-6 w-6 text-blue-600" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Committed Amount */}
-                <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-orange-700">Engagé</p>
-                      <p className="text-2xl font-bold text-orange-900 mt-1">
-                        {formatCurrency(budgetLine.committedAmount)}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-orange-600" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Remaining Amount */}
-                <div className={`rounded-lg p-4 border ${remainingAmount >= 0
-                  ? 'bg-green-50 border-green-200'
-                  : 'bg-red-50 border-red-200'
-                  }`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-sm font-medium ${remainingAmount >= 0 ? 'text-green-700' : 'text-red-700'
-                        }`}>
-                        Restant
-                      </p>
-                      <p className={`text-2xl font-bold mt-1 ${remainingAmount >= 0 ? 'text-green-900' : 'text-red-900'
-                        }`}>
-                        {formatCurrency(remainingAmount)}
-                      </p>
-                    </div>
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${remainingAmount >= 0 ? 'bg-green-100' : 'bg-red-100'
-                      }`}>
-                      {remainingAmount >= 0 ? (
-                        <TrendingUp className={`h-6 w-6 ${remainingAmount >= 0 ? 'text-green-600' : 'text-red-600'
-                          }`} />
-                      ) : (
-                        <TrendingDown className="h-6 w-6 text-red-600" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Utilization Card */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Utilisation du Budget</h2>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Taux d'Utilisation</span>
-                  <span className={`text-sm font-bold px-2 py-1 rounded ${getUtilizationColor(utilization)}`}>
-                    {utilization.toFixed(1)}%
+        {/* Tab Content */}
+        {activeTab === 'details' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Main Details */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Basic Information Card */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <span>Informations de Base</span>
+                  </h2>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getTypeBadgeColor(budgetLine.type)}`}>
+                    {budgetLine.type}
                   </span>
                 </div>
 
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className={`h-3 rounded-full transition-all duration-300 ${utilization >= 90 ? 'bg-red-500' :
-                      utilization >= 75 ? 'bg-orange-500' :
-                        utilization >= 50 ? 'bg-yellow-500' : 'bg-green-500'
-                      }`}
-                    style={{ width: `${Math.min(utilization, 100)}%` }}
-                  ></div>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Code Complet</label>
+                      <div className="flex items-center space-x-2">
+                        <Hash className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm font-mono bg-gray-50 px-3 py-2 rounded-lg border">
+                          {budgetLine.fullCode}
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="text-xs text-gray-500 space-y-1">
-                  <div className="flex justify-between">
-                    <span>0%</span>
-                    <span>50%</span>
-                    <span>100%</span>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Article</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editedLine.article || ''}
+                          onChange={(e) => setEditedLine({ ...editedLine, article: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg border">
+                          {budgetLine.article || 'N/A'}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Paragraphe</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editedLine.paragraph || ''}
+                          onChange={(e) => setEditedLine({ ...editedLine, paragraph: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg border">
+                          {budgetLine.paragraph || 'N/A'}
+                        </p>
+                      )}
+                    </div>
                   </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Ligne</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editedLine.line || ''}
+                          onChange={(e) => setEditedLine({ ...editedLine, line: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg border">
+                          {budgetLine.line || 'N/A'}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                      {isEditing ? (
+                        <select
+                          value={editedLine.type || ''}
+                          onChange={(e) => setEditedLine({ ...editedLine, type: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="MDD">MDD</option>
+                          <option value="INV">INV</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg border">
+                          {budgetLine.type}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                      <div className="flex items-center space-x-2">
+                        {availableAmount >= 0 ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <span className={`text-sm font-medium ${availableAmount >= 0 ? 'text-green-700' : 'text-red-700'
+                          }`}>
+                          {availableAmount >= 0 ? 'Budget Disponible' : 'Budget Dépassé'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description Card */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                  <Building className="h-5 w-5 text-blue-600" />
+                  <span>Description et Libellé</span>
+                </h2>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Libellé</label>
+                  {isEditing ? (
+                    <textarea
+                      value={editedLine.label || ''}
+                      onChange={(e) => setEditedLine({ ...editedLine, label: e.target.value })}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Entrez la description de la ligne budgétaire..."
+                    />
+                  ) : (
+                    <div className="bg-gray-50 border rounded-lg p-4">
+                      <p className="text-gray-900 whitespace-pre-wrap">
+                        {budgetLine.label || 'Aucune description disponible'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Quick Actions Card */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions Rapides</h2>
+            {/* Right Column - Financial Summary */}
+            <div className="space-y-6">
+              {/* Financial Overview Card */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center space-x-2">
+                  <DollarSign className="h-5 w-5 text-blue-600" />
+                  <span>Aperçu Financier</span>
+                </h2>
 
-              <div className="space-y-3">
-                <button className="w-full flex items-center space-x-3 p-3 text-left hover:bg-blue-50 rounded-lg transition-colors border border-gray-200">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <DollarSign className="h-4 w-4 text-blue-600" />
+                <div className="space-y-6">
+                  {/* Initial Amount */}
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-700">Budget Initial</p>
+                        <p className="text-2xl font-bold text-blue-900 mt-1">
+                          {formatCurrency(budgetLine.initialAmount)}
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <DollarSign className="h-6 w-6 text-blue-600" />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-gray-700 font-medium">Ajouter une Transaction</span>
-                </button>
 
-                <button className="w-full flex items-center space-x-3 p-3 text-left hover:bg-green-50 rounded-lg transition-colors border border-gray-200">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-green-600" />
+                  {/* Committed Amount */}
+                  <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-orange-700">Engagé</p>
+                        <p className="text-2xl font-bold text-orange-900 mt-1">
+                          {formatCurrency(budgetLine.committedAmount)}
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <TrendingUp className="h-6 w-6 text-orange-600" />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-gray-700 font-medium">Générer un Rapport</span>
-                </button>
 
-                <button className="w-full flex items-center space-x-3 p-3 text-left hover:bg-purple-50 rounded-lg transition-colors border border-gray-200">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4 text-purple-600" />
+                  {/* Spent Amount */}
+                  <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-red-700">Dépensé</p>
+                        <p className="text-2xl font-bold text-red-900 mt-1">
+                          {formatCurrency(budgetLine.spentAmount || 0)}
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <DollarSign className="h-6 w-6 text-red-600" />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-gray-700 font-medium">Voir les Analyses</span>
-                </button>
+
+                  {/* Remaining Amount */}
+                  <div className={`rounded-lg p-4 border ${availableAmount >= 0
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-red-50 border-red-200'
+                    }`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className={`text-sm font-medium ${availableAmount >= 0 ? 'text-green-700' : 'text-red-700'
+                          }`}>
+                          Disponible
+                        </p>
+                        <p className={`text-2xl font-bold mt-1 ${availableAmount >= 0 ? 'text-green-900' : 'text-red-900'
+                          }`}>
+                          {formatCurrency(availableAmount)}
+                        </p>
+                      </div>
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${availableAmount >= 0 ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
+                        {availableAmount >= 0 ? (
+                          <CheckCircle className="h-6 w-6 text-green-600" />
+                        ) : (
+                          <TrendingDown className="h-6 w-6 text-red-600" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Utilization Card */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Utilisation du Budget</h2>
+
+                <div className="space-y-6">
+                  {/* Commitment Rate */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">Taux d'Engagement</span>
+                      <span className={`text-sm font-bold px-2 py-1 rounded ${getUtilizationColor(utilization)}`}>
+                        {utilization.toFixed(1)}%
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className={`h-3 rounded-full transition-all duration-300 ${utilization >= 90 ? 'bg-red-500' :
+                          utilization >= 75 ? 'bg-orange-500' :
+                            utilization >= 50 ? 'bg-yellow-500' : 'bg-green-500'
+                          }`}
+                        style={{ width: `${Math.min(utilization, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Spending Rate */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">Taux de Dépense</span>
+                      <span className={`text-sm font-bold px-2 py-1 rounded ${getUtilizationColor((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100)}`}>
+                        {((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100).toFixed(1)}%
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className={`h-3 rounded-full transition-all duration-300 ${
+                          ((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100) >= 90 ? 'bg-red-500' :
+                          ((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100) >= 75 ? 'bg-orange-500' :
+                          ((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100) >= 50 ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${Math.min(((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100), 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Efficiency */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">Efficacité Engagement</span>
+                      <span className="text-sm font-bold px-2 py-1 rounded bg-blue-50 text-blue-600">
+                        {budgetLine.committedAmount > 0 ? ((budgetLine.spentAmount || 0) / budgetLine.committedAmount * 100).toFixed(1) : 0}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Pourcentage des engagements effectivement dépensés
+                    </p>
+                  </div>
+
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div className="flex justify-between">
+                      <span>0%</span>
+                      <span>50%</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions Card */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions Rapides</h2>
+
+                <div className="space-y-3">
+                  <button className="w-full flex items-center space-x-3 p-3 text-left hover:bg-blue-50 rounded-lg transition-colors border border-gray-200">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <DollarSign className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <span className="text-gray-700 font-medium">Ajouter une Transaction</span>
+                  </button>
+
+                  <button className="w-full flex items-center space-x-3 p-3 text-left hover:bg-green-50 rounded-lg transition-colors border border-gray-200">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <FileText className="h-4 w-4 text-green-600" />
+                    </div>
+                    <span className="text-gray-700 font-medium">Générer un Rapport</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab('analytics')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-purple-50 rounded-lg transition-colors border border-gray-200"
+                  >
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <TrendingUp className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <span className="text-gray-700 font-medium">Voir les Analyses</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Charts Tab */}
+        {activeTab === 'charts' && (
+          <BudgetCharts budgetLine={budgetLine} />
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <BudgetAnalytics budgetLine={budgetLine} />
+        )}
+
+        {/* Real-time Tab */}
+        {activeTab === 'realtime' && (
+          <RealTimeChart budgetLine={budgetLine} />
+        )}
       </div>
     </div>
   );
