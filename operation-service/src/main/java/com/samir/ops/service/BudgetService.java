@@ -2,11 +2,13 @@ package com.samir.ops.service;
 
 import com.samir.ops.dto.BudgetFilterDTO;
 import com.samir.ops.dto.UserContext;
+import com.samir.ops.exception.UnauthorizedAccessException;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.model.Type;
 import com.samir.ops.repository.BudgetRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -102,7 +104,6 @@ public class BudgetService {
      * Logic for fetching budgets based on user role.
      */
     public List<BudgetLine> getAllBudgets(UserContext user) {
-        // FIXED: Use .equals() for String comparison, never ==
         if ("SUPER_ADMIN".equals(user.getRole())) {
             return budgetRepository.findAll();
         }
@@ -135,13 +136,20 @@ public class BudgetService {
         throw new RuntimeException("Please fill at least one of the codes (Article, Paragraph, Line, or Type)");
     }
 
-    public BudgetLine getBudgetLineByCode(String fullCode, Long org) {
-        return budgetRepository.findByFullCodeAndOrganizationId(fullCode, org)
+    public BudgetLine getBudgetLineByUuid(UUID uuid, UserContext user) {
+        BudgetLine budget = budgetRepository.findBudgetLineByUuid(uuid)
+                .orElseThrow(() -> new RuntimeException("This Budget Line  doesn't exist for your org."));
+        if(budget.getOrganizationId() != user.getOrgId())
+            throw new UnauthorizedAccessException();
+        return budget;
+    }
+
+    public BudgetLine getBudgetLineByCode(String fullCode, UserContext user) {
+        return budgetRepository.findByFullCodeAndOrganizationId(fullCode, user.getOrgId())
                 .orElseThrow(() -> new RuntimeException("Budget Line " + fullCode + " doesn't exist for your org."));
     }
 
     public List<BudgetLine> getBudgetLineByArticle(String article, Long org) {
-        // FIXED: Use passed orgId instead of 1L
         return budgetRepository.findByArticleAndOrganizationId(article, org);
     }
 
@@ -182,4 +190,6 @@ public class BudgetService {
             default: return "";
         }
     }
+
+
 }

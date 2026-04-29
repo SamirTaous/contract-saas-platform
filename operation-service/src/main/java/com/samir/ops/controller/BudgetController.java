@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/budget")
@@ -40,14 +41,21 @@ public class BudgetController {
         return ResponseEntity.ok(budgets);
     }
 
+    @GetMapping("/code/{uuid}")
+    public ResponseEntity<BudgetLine> getBudgetByUuid(@RequestHeader("Authorization") String authHeader, @PathVariable UUID uuid){
+        UserContext user = jwtUtils.getUserContext(authHeader);
+        return ResponseEntity.ok(budgetService.getBudgetLineByUuid(uuid, user));
+    }
+
     @GetMapping("{fullcode}")
-    public ResponseEntity<BudgetLine> getBudgetLineByFullCode(@PathVariable String fullcode){
-        return ResponseEntity.ok(budgetService.getBudgetLineByCode(fullcode,1L));
+    public ResponseEntity<BudgetLine> getBudgetLineByFullCode(@RequestHeader("Authorization") String authHeader, @PathVariable String fullcode){
+        UserContext user = jwtUtils.getUserContext(authHeader);
+        return ResponseEntity.ok(budgetService.getBudgetLineByCode(fullcode,user));
     }
 
     @GetMapping("{article}")
-    public ResponseEntity<BudgetLine> getBudgetLineByArticle(@PathVariable String article){
-        return ResponseEntity.ok(budgetService.getBudgetLineByCode(article,1L));
+    public ResponseEntity<List<BudgetLine>> getBudgetLineByArticle(@PathVariable String article){
+        return ResponseEntity.ok(budgetService.getBudgetLineByArticle(article,1L));
     }
 
     @GetMapping("/filter")
