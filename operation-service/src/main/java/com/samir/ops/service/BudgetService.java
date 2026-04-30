@@ -113,24 +113,24 @@ public class BudgetService {
     /**
      * Filters the budget using hierarchical priority.
      */
-    public List<BudgetLine> filterBudget(BudgetFilterDTO filter, Long orgId) {
+    public List<BudgetLine> filterBudget(BudgetFilterDTO filter, UserContext user) {
         // Hierarchy: Line > Paragraph > Article > Type
         if (filter.getLine() != null && filter.getParagraph() != null && filter.getArticle() != null) {
             return budgetRepository.findByArticleAndParagraphAndLineAndOrganizationId(
-                    filter.getArticle(), filter.getParagraph(), filter.getLine(), orgId);
+                    filter.getArticle(), filter.getParagraph(), filter.getLine(), user.getOrgId());
         }
 
         if (filter.getParagraph() != null && filter.getArticle() != null) {
             return budgetRepository.findByArticleAndParagraphAndOrganizationId(
-                    filter.getArticle(), filter.getParagraph(), orgId);
+                    filter.getArticle(), filter.getParagraph(), user.getOrgId());
         }
 
         if (filter.getArticle() != null) {
-            return budgetRepository.findByArticleAndOrganizationId(filter.getArticle(), orgId);
+            return budgetRepository.findByArticleAndOrganizationId(filter.getArticle(), user.getOrgId());
         }
 
         if (filter.getType() != null) {
-            return budgetRepository.findByTypeAndOrganizationId(filter.getType(), orgId);
+            return budgetRepository.findByTypeAndOrganizationId(filter.getType(), user.getOrgId());
         }
 
         throw new RuntimeException("Please fill at least one of the codes (Article, Paragraph, Line, or Type)");
@@ -149,8 +149,8 @@ public class BudgetService {
                 .orElseThrow(() -> new RuntimeException("Budget Line " + fullCode + " doesn't exist for your org."));
     }
 
-    public List<BudgetLine> getBudgetLineByArticle(String article, Long org) {
-        return budgetRepository.findByArticleAndOrganizationId(article, org);
+    public List<BudgetLine> getBudgetLineByArticle(String article, UserContext user) {
+        return budgetRepository.findByArticleAndOrganizationId(article, user.getOrgId());
     }
 
     /**

@@ -41,25 +41,27 @@ public class BudgetController {
         return ResponseEntity.ok(budgets);
     }
 
-    @GetMapping("/code/{uuid}")
+    @GetMapping("{uuid}")
     public ResponseEntity<BudgetLine> getBudgetByUuid(@RequestHeader("Authorization") String authHeader, @PathVariable UUID uuid){
         UserContext user = jwtUtils.getUserContext(authHeader);
         return ResponseEntity.ok(budgetService.getBudgetLineByUuid(uuid, user));
     }
 
-    @GetMapping("{fullcode}")
+    @GetMapping("/code/{fullcode}")
     public ResponseEntity<BudgetLine> getBudgetLineByFullCode(@RequestHeader("Authorization") String authHeader, @PathVariable String fullcode){
         UserContext user = jwtUtils.getUserContext(authHeader);
         return ResponseEntity.ok(budgetService.getBudgetLineByCode(fullcode,user));
     }
 
-    @GetMapping("{article}")
-    public ResponseEntity<List<BudgetLine>> getBudgetLineByArticle(@PathVariable String article){
-        return ResponseEntity.ok(budgetService.getBudgetLineByArticle(article,1L));
+    @GetMapping("/article/{article}")
+    public ResponseEntity<List<BudgetLine>> getBudgetLineByArticle(@RequestHeader("Authorization") String authHeader, @PathVariable String article){
+        UserContext user = jwtUtils.getUserContext(authHeader);
+        return ResponseEntity.ok(budgetService.getBudgetLineByArticle(article,user));
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<List<BudgetLine>> getBudgetsByFilter(@RequestBody BudgetFilterDTO filter){
-        return ResponseEntity.ok(budgetService.filterBudget(filter, 1L));
+    public ResponseEntity<List<BudgetLine>> getBudgetsByFilter(@RequestHeader("Authorization") String authHeader, @RequestBody BudgetFilterDTO filter){
+        UserContext user = jwtUtils.getUserContext(authHeader);
+        return ResponseEntity.ok(budgetService.filterBudget(filter, user));
     }
 }
