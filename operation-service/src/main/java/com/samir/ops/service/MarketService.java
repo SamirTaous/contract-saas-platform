@@ -143,7 +143,9 @@ public class MarketService {
                 market.getStatus().toString(),
                 market.getBudgetLine().getFullCode(),
                 market.getBudgetLine().getUuid(),
-                market.getBudgetLine().getInitialAmount().subtract(market.getTotalAmount())
+                market.getBudgetLine().getInitialAmount()
+                .subtract(market.getBudgetLine().getCommittedAmount())
+                .subtract(market.getBudgetLine().getSpentAmount())
                 );
     }
 }
