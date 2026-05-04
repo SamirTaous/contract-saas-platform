@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Building,
   FileText,
-  BarChart3
+  BarChart3,
+  ChevronLeft
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
@@ -29,6 +30,7 @@ const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const [organization, setOrganization] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
@@ -156,31 +158,74 @@ const Layout = ({ children }) => {
       )}
 
       {/* Sidebar - Fixed position */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform ${
+      <div className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 transform ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col`}>
+      } transition-all duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
+        sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'
+      } w-64`}>
+        
+        {/* Collapse/Expand Button - Desktop only */}
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className={`hidden lg:flex absolute -right-3 top-6 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center hover:bg-gray-50 transition-colors z-10 shadow-sm ${
+            sidebarCollapsed ? 'rotate-180' : ''
+          }`}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <ChevronLeft className="h-3 w-3 text-gray-600" />
+        </button>
         
         {/* User Profile Section - Top */}
-        <div className="p-4 border-b border-gray-200 flex-shrink-0">
+        <div className={`p-4 border-b border-gray-200 flex-shrink-0 ${sidebarCollapsed ? 'lg:px-2' : ''}`}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 min-w-0 flex-1">
+            <div className={`flex items-center space-x-3 min-w-0 flex-1 ${sidebarCollapsed ? 'lg:justify-center' : ''}`}>
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-medium">
                   {user?.username?.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.username}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {user?.role?.replace('_', ' ')}
-                </p>
-              </div>
+              {!sidebarCollapsed && (
+                <div className="flex-1 min-w-0 lg:block">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user?.username}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user?.role?.replace('_', ' ')}
+                  </p>
+                </div>
+              )}
             </div>
             
-            <div className="flex items-center space-x-1">
-              <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
+            {!sidebarCollapsed && (
+              <div className="flex items-center space-x-1 lg:flex">
+                <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
+                  <Bell className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  title="Se déconnecter"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors ml-2"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          
+          {/* Collapsed state actions */}
+          {sidebarCollapsed && (
+            <div className="hidden lg:flex flex-col items-center space-y-2 mt-3">
+              <button 
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                title="Notifications"
+              >
                 <Bell className="h-4 w-4" />
               </button>
               <button
@@ -191,18 +236,11 @@ const Layout = ({ children }) => {
                 <LogOut className="h-4 w-4" />
               </button>
             </div>
-            
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors ml-2"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          )}
         </div>
 
         {/* Organization Workspace Switcher */}
-        {organization && (
+        {organization && !sidebarCollapsed && (
           <div className="px-3 py-4 border-b border-gray-200 flex-shrink-0">
             <button
               onClick={() => setOrgDropdownOpen(!orgDropdownOpen)}
@@ -237,8 +275,20 @@ const Layout = ({ children }) => {
           </div>
         )}
 
+        {/* Organization icon only - collapsed state */}
+        {organization && sidebarCollapsed && (
+          <div className="hidden lg:flex px-2 py-4 border-b border-gray-200 flex-shrink-0 justify-center">
+            <div 
+              className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0"
+              title={organization.name}
+            >
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+          </div>
+        )}
+
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+        <nav className={`flex-1 py-6 space-y-1 overflow-y-auto ${sidebarCollapsed ? 'lg:px-2' : 'px-3'}`}>
           {filteredNavigation.map((item) => {
             const Icon = item.icon;
             
@@ -248,73 +298,95 @@ const Layout = ({ children }) => {
               
               return (
                 <div key={item.name}>
-                  <button
-                    onClick={() => setBudgetSubmenuOpen(!budgetSubmenuOpen)}
-                    className={`group flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                      isActive
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Icon className={`h-5 w-5 flex-shrink-0 ${
-                        isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
-                      }`} />
-                      <div className="flex-1 min-w-0 text-left">
-                        <span className="truncate">{item.name}</span>
-                        {item.description && (
-                          <p className={`text-xs truncate ${
-                            isActive ? 'text-blue-600' : 'text-gray-500'
-                          }`}>
-                            {item.description}
-                          </p>
-                        )}
-                      </div>
+                  {sidebarCollapsed ? (
+                    // Collapsed state - show icon only with tooltip
+                    <div className="hidden lg:block">
+                      <button
+                        onClick={() => setSidebarCollapsed(false)}
+                        className={`group flex items-center justify-center w-full p-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                          isActive
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                        title={item.name}
+                      >
+                        <Icon className={`h-5 w-5 ${
+                          isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
+                        }`} />
+                      </button>
                     </div>
-                    <ChevronRight className={`h-4 w-4 transition-transform ${
-                      budgetSubmenuOpen ? 'rotate-90' : ''
-                    } ${isActive ? 'text-blue-700' : 'text-gray-400'}`} />
-                  </button>
-                  
-                  {/* Submenu */}
-                  {budgetSubmenuOpen && (
-                    <div className="mt-1 ml-8 space-y-1">
-                      {item.submenu.map((subItem) => {
-                        const SubIcon = subItem.icon;
-                        return (
-                          <NavLink
-                            key={subItem.name}
-                            to={subItem.href}
-                            onClick={() => setSidebarOpen(false)}
-                            className={({ isActive }) =>
-                              `group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                                isActive
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                              }`
-                            }
-                          >
-                            {({ isActive }) => (
-                              <div className="flex items-center space-x-3 w-full">
-                                <SubIcon className={`h-4 w-4 flex-shrink-0 ${
-                                  isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
-                                }`} />
-                                <div className="flex-1 min-w-0">
-                                  <span className="truncate">{subItem.name}</span>
-                                  {subItem.description && (
-                                    <p className={`text-xs truncate ${
-                                      isActive ? 'text-blue-600' : 'text-gray-500'
-                                    }`}>
-                                      {subItem.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
+                  ) : (
+                    // Expanded state - show full menu
+                    <>
+                      <button
+                        onClick={() => setBudgetSubmenuOpen(!budgetSubmenuOpen)}
+                        className={`group flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                          isActive
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Icon className={`h-5 w-5 flex-shrink-0 ${
+                            isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
+                          }`} />
+                          <div className="flex-1 min-w-0 text-left">
+                            <span className="truncate">{item.name}</span>
+                            {item.description && (
+                              <p className={`text-xs truncate ${
+                                isActive ? 'text-blue-600' : 'text-gray-500'
+                              }`}>
+                                {item.description}
+                              </p>
                             )}
-                          </NavLink>
-                        );
-                      })}
-                    </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={`h-4 w-4 transition-transform ${
+                          budgetSubmenuOpen ? 'rotate-90' : ''
+                        } ${isActive ? 'text-blue-700' : 'text-gray-400'}`} />
+                      </button>
+                      
+                      {/* Submenu */}
+                      {budgetSubmenuOpen && (
+                        <div className="mt-1 ml-8 space-y-1">
+                          {item.submenu.map((subItem) => {
+                            const SubIcon = subItem.icon;
+                            return (
+                              <NavLink
+                                key={subItem.name}
+                                to={subItem.href}
+                                onClick={() => setSidebarOpen(false)}
+                                className={({ isActive }) =>
+                                  `group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                                    isActive
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                  }`
+                                }
+                              >
+                                {({ isActive }) => (
+                                  <div className="flex items-center space-x-3 w-full">
+                                    <SubIcon className={`h-4 w-4 flex-shrink-0 ${
+                                      isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
+                                    }`} />
+                                    <div className="flex-1 min-w-0">
+                                      <span className="truncate">{subItem.name}</span>
+                                      {subItem.description && (
+                                        <p className={`text-xs truncate ${
+                                          isActive ? 'text-blue-600' : 'text-gray-500'
+                                        }`}>
+                                          {subItem.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </NavLink>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               );
@@ -327,28 +399,37 @@ const Layout = ({ children }) => {
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                  `group flex items-center rounded-lg transition-colors duration-200 ${
+                    sidebarCollapsed 
+                      ? 'lg:justify-center lg:p-3' 
+                      : 'px-3 py-2.5'
+                  } text-sm font-medium ${
                     isActive
                       ? 'bg-blue-50 text-blue-700'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`
                 }
+                title={sidebarCollapsed ? item.name : undefined}
               >
                 {({ isActive }) => (
-                  <div className="flex items-center space-x-3 w-full">
+                  <div className={`flex items-center w-full ${
+                    sidebarCollapsed ? 'lg:justify-center' : 'space-x-3'
+                  }`}>
                     <Icon className={`h-5 w-5 flex-shrink-0 ${
                       isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
                     }`} />
-                    <div className="flex-1 min-w-0">
-                      <span className="truncate">{item.name}</span>
-                      {item.description && (
-                        <p className={`text-xs truncate ${
-                          isActive ? 'text-blue-600' : 'text-gray-500'
-                        }`}>
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
+                    {!sidebarCollapsed && (
+                      <div className="flex-1 min-w-0 lg:block">
+                        <span className="truncate">{item.name}</span>
+                        {item.description && (
+                          <p className={`text-xs truncate ${
+                            isActive ? 'text-blue-600' : 'text-gray-500'
+                          }`}>
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </NavLink>
@@ -361,7 +442,9 @@ const Layout = ({ children }) => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col lg:ml-64">
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${
+        sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+      }`}>
         {/* Mobile header */}
         <div className="lg:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-3 flex-shrink-0">
           <div className="flex items-center justify-between">
