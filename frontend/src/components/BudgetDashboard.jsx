@@ -292,17 +292,17 @@ const BudgetDashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm border border-blue-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0 pr-4">
                 <p className="text-sm font-medium text-blue-700 mb-1">Budget Total</p>
                 <p className="text-2xl font-bold text-blue-900 truncate">
                   {formatCurrency(totalBudget)}
                 </p>
                 <div className="flex items-center mt-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                  <span className="text-xs text-blue-600">Montant alloué</span>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></div>
+                  <span className="text-xs text-blue-600 truncate">Montant alloué</span>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
                 <DollarSign className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -310,17 +310,17 @@ const BudgetDashboard = () => {
 
           <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm border border-orange-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0 pr-4">
                 <p className="text-sm font-medium text-orange-700 mb-1">Montant Engagé</p>
                 <p className="text-2xl font-bold text-orange-900 truncate">
                   {formatCurrency(totalCommitted)}
                 </p>
                 <div className="flex items-center mt-2">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                  <span className="text-xs text-orange-600">Dépenses actuelles</span>
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-2 flex-shrink-0"></div>
+                  <span className="text-xs text-orange-600 truncate">Dépenses actuelles</span>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -328,17 +328,17 @@ const BudgetDashboard = () => {
 
           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm border border-green-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0 pr-4">
                 <p className="text-sm font-medium text-green-700 mb-1">Disponible</p>
                 <p className="text-2xl font-bold text-green-900 truncate">
                   {formatCurrency(totalRemaining)}
                 </p>
                 <div className="flex items-center mt-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-xs text-green-600">Solde restant</span>
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
+                  <span className="text-xs text-green-600 truncate">Solde restant</span>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
                 <CheckCircle className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -350,23 +350,23 @@ const BudgetDashboard = () => {
             'from-emerald-50 to-emerald-100 border-emerald-200'
           }`}>
             <div className="flex items-center justify-between">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0 pr-4">
                 <p className={`text-sm font-medium mb-1 ${
                   utilizationRate > 90 ? 'text-red-700' :
                   utilizationRate > 75 ? 'text-yellow-700' : 'text-emerald-700'
                 }`}>Taux d'Utilisation</p>
-                <p className={`text-2xl font-bold ${
+                <p className={`text-2xl font-bold truncate ${
                   utilizationRate > 90 ? 'text-red-900' :
                   utilizationRate > 75 ? 'text-yellow-900' : 'text-emerald-900'
                 }`}>
                   {utilizationRate.toFixed(1)}%
                 </p>
                 <div className="flex items-center mt-2">
-                  <div className={`w-2 h-2 rounded-full mr-2 ${
+                  <div className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 ${
                     utilizationRate > 90 ? 'bg-red-500' :
                     utilizationRate > 75 ? 'bg-yellow-500' : 'bg-emerald-500'
                   }`}></div>
-                  <span className={`text-xs ${
+                  <span className={`text-xs truncate ${
                     utilizationRate > 90 ? 'text-red-600' :
                     utilizationRate > 75 ? 'text-yellow-600' : 'text-emerald-600'
                   }`}>
@@ -375,7 +375,7 @@ const BudgetDashboard = () => {
                   </span>
                 </div>
               </div>
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 ${
                 utilizationRate > 90 ? 'bg-red-500' :
                 utilizationRate > 75 ? 'bg-yellow-500' : 'bg-emerald-500'
               }`}>
