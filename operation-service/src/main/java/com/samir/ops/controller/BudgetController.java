@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Year;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,15 +24,17 @@ public class BudgetController {
     private final JwtUtils jwtUtils;
 
     @PostMapping("/import")
-    public ResponseEntity<String> importBudget(@RequestParam("file") MultipartFile file,
-                                               @RequestHeader("Authorization") String authHeader) {
-        try {
-            UserContext user = jwtUtils.getUserContext(authHeader);
-            budgetService.importBudgetExcel(file, user.getOrgId());
-            return ResponseEntity.ok("Budget imported successfully for "+ user.getOrgName());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Import failed: " + e.getMessage());
-        }
+    public ResponseEntity<String> importBudget(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam int year,
+            @RequestParam boolean isRAM,
+            @RequestHeader("Authorization") String authHeader) throws Exception {
+
+        UserContext user = jwtUtils.getUserContext(authHeader);
+        budgetService.importBudgetExcel(file, user.getOrgId(), year, isRAM);
+
+        // 3. Return a simple success signal
+        return ResponseEntity.ok("Budget data processed successfully.");
     }
 
     @GetMapping("/all")

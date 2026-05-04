@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.Year;
 import java.util.*;
 
 @Service
@@ -29,7 +30,7 @@ public class BudgetService {
      * Implements Upsert (Update or Insert) and accumulation logic.
      */
     @Transactional
-    public void importBudgetExcel(MultipartFile file, Long organizationId) throws Exception {
+    public void importBudgetExcel(MultipartFile file, Long organizationId, int year, boolean isRAM) throws Exception {
         Workbook workbook = WorkbookFactory.create(file.getInputStream());
         Sheet sheet = workbook.getSheetAt(0);
 
@@ -42,7 +43,6 @@ public class BudgetService {
             if (row == null) continue;
 
             String typeStr = getCellValueAsString(row.getCell(0)).trim();
-            // Skip headers, empty rows, and separators
             if (typeStr.isEmpty() || typeStr.contains("-") || typeStr.equalsIgnoreCase("WSAZ")) continue;
 
             try {
@@ -51,39 +51,57 @@ public class BudgetService {
                 String lineNo = getCellValueAsString(row.getCell(4));
                 String fullCode = String.join(".", typeStr.toUpperCase(), article, paragraph, lineNo);
 
-                // Extract Amount and Label based on your latest index (7 and 8)
                 BigDecimal amountValue = extractNumericValue(row.getCell(7), i);
                 String rowLabel = getCellValueAsString(row.getCell(8));
 
                 BudgetLine budgetLine;
 
-                // 1. Check if we already handled this code in this specific loop
+                // 1. Memory Check (Batch duplicates)
                 if (processedLines.containsKey(fullCode)) {
                     budgetLine = processedLines.get(fullCode);
-                    // Add amounts together if code repeats in same file
-                    budgetLine.setInitialAmount(budgetLine.getInitialAmount().add(amountValue));
+
+                    if (isRAM) {
+                        budgetLine.setCommittedAmount(budgetLine.getCommittedAmount().add(amountValue));
+                    } else {
+                        budgetLine.setInitialAmount(budgetLine.getInitialAmount().add(amountValue));
+                    }
+
                     if (!rowLabel.isEmpty()) budgetLine.setLabel(budgetLine.getLabel() + " | " + rowLabel);
                 }
                 else {
-                    // 2. Check if it exists in the Database from previous imports
-                    Optional<BudgetLine> dbLine = budgetRepository.findByFullCodeAndOrganizationId(fullCode, organizationId);
+                    // 2. Database Check (Using java.time.Year)
+                    Optional<BudgetLine> dbLine = budgetRepository.findByFullCodeAndOrganizationIdAndFiscalYear(fullCode, organizationId, year);
 
                     if (dbLine.isPresent()) {
                         budgetLine = dbLine.get();
-                        budgetLine.setInitialAmount(amountValue); // Overwrite with newest state
+                        if (isRAM) {
+                            // RAM Logic: ADD to the existing locked money
+                            budgetLine.setCommittedAmount(budgetLine.getCommittedAmount().add(amountValue));
+                        } else {
+                            // Initial Budget Logic: SET the total money
+                            budgetLine.setInitialAmount(amountValue);
+                        }
                         budgetLine.setLabel(rowLabel);
-                        log.info("Updating existing record: {}", fullCode);
+                        log.info("Updating existing record for year {}: {}", year, fullCode);
                     } else {
-                        // 3. Create brand new line
+                        // 3. Create brand new line for this Year
                         budgetLine = new BudgetLine();
                         budgetLine.setType(Type.valueOf(typeStr.toUpperCase()));
                         budgetLine.setArticle(article);
                         budgetLine.setParagraph(paragraph);
                         budgetLine.setLine(lineNo);
-                        budgetLine.setInitialAmount(amountValue);
-                        budgetLine.setLabel(rowLabel);
                         budgetLine.setOrganizationId(organizationId);
-                        log.info("Creating new line: {}", fullCode);
+                        budgetLine.setFiscalYear(year); // <--- Using java.time.Year
+                        budgetLine.setLabel(rowLabel);
+
+                        if (isRAM) {
+                            budgetLine.setInitialAmount(BigDecimal.ZERO);
+                            budgetLine.setCommittedAmount(amountValue);
+                        } else {
+                            budgetLine.setInitialAmount(amountValue);
+                            budgetLine.setCommittedAmount(BigDecimal.ZERO);
+                        }
+                        log.info("Creating new line for year {}: {}", year, fullCode);
                     }
                 }
                 processedLines.put(fullCode, budgetLine);
@@ -95,7 +113,6 @@ public class BudgetService {
 
         if (!processedLines.isEmpty()) {
             budgetRepository.saveAll(processedLines.values());
-            log.info("Import complete. Processed {} unique budget lines.", processedLines.size());
         }
         workbook.close();
     }

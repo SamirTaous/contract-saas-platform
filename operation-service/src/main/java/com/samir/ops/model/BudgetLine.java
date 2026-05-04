@@ -28,7 +28,7 @@ public class BudgetLine {
     private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = false)
-    private Year fiscalYear;
+    private int fiscalYear;
 
     @Enumerated(EnumType.STRING)
     private Type type;
