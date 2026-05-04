@@ -7,11 +7,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.Year;
 import java.util.UUID;
 
 @Entity
 @Table(name = "budget_lines", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"full_code", "organization_id"})
+        @UniqueConstraint(columnNames = {"full_code", "organization_id", "fiscal_year"})
 })
 @Getter
 @Setter
@@ -25,6 +26,9 @@ public class BudgetLine {
 
     @Column(nullable = false, unique = true)
     private UUID uuid = UUID.randomUUID();
+
+    @Column(nullable = false)
+    private Year fiscalYear;
 
     @Enumerated(EnumType.STRING)
     private Type type;
