@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
+import { useSidebar } from '../contexts/SidebarContext';
 import BudgetImport from './BudgetImport';
 
 const budgetApi = setupApiInterceptors(axios.create({
@@ -29,6 +30,7 @@ const budgetApi = setupApiInterceptors(axios.create({
 }));
 
 const BudgetTable = () => {
+  const { sidebarCollapsed } = useSidebar();
   const navigate = useNavigate();
   const [budgetLines, setBudgetLines] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,7 +184,9 @@ const BudgetTable = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 ${
+        sidebarCollapsed ? 'max-w-none' : 'max-w-7xl'
+      }`}>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">

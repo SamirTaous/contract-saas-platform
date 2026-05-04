@@ -29,6 +29,7 @@ import {
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
+import { useSidebar } from '../contexts/SidebarContext';
 import BudgetComparison from './BudgetComparison';
 
 // Register Chart.js components
@@ -50,6 +51,7 @@ const budgetApi = setupApiInterceptors(axios.create({
 
 const BudgetDashboard = () => {
   const navigate = useNavigate();
+  const { sidebarCollapsed } = useSidebar();
   const [budgetLines, setBudgetLines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -232,7 +234,9 @@ const BudgetDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 ${
+        sidebarCollapsed ? 'max-w-none' : 'max-w-7xl'
+      }`}>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">

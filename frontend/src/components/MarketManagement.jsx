@@ -15,12 +15,13 @@ import {
   List
 } from 'lucide-react';
 import axios from 'axios';
+import { useSidebar } from '../contexts/SidebarContext';
 import LoadingSkeleton from './LoadingSkeleton';
 import CreateMarketWizard from './market/CreateMarketWizard';
 import MarketCard from './market/MarketCard';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
 import { formatCurrency } from '../utils/currency';
-import { designSystem } from '../styles/designSystem';
+import { designSystem, getContainerClasses } from '../styles/designSystem';
 import PageHeader from './ui/PageHeader';
 import StatCard from './ui/StatCard';
 import Button from './ui/Button';
@@ -33,6 +34,7 @@ const operationApi = setupApiInterceptors(axios.create({
 }));
 
 const MarketManagement = () => {
+  const { sidebarCollapsed } = useSidebar();
   const [markets, setMarkets] = useState([]);
   const [budgetLines, setBudgetLines] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -141,7 +143,7 @@ const MarketManagement = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className={getContainerClasses(sidebarCollapsed)}>
           {/* Header Skeleton */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
@@ -162,7 +164,7 @@ const MarketManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className={designSystem.layout.container}>
+      <div className={getContainerClasses(sidebarCollapsed)}>
         <div className={designSystem.layout.section}>
           {/* Header */}
           <PageHeader

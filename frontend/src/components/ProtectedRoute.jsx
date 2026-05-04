@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { SidebarProvider } from '../contexts/SidebarContext';
 import Layout from './Layout';
 
 const ProtectedRoute = () => {
@@ -35,9 +36,11 @@ const ProtectedRoute = () => {
   }
 
   return (
-    <Layout>
-      <Outlet />
-    </Layout>
+    <SidebarProvider>
+      <Layout>
+        <Outlet />
+      </Layout>
+    </SidebarProvider>
   );
 };
 

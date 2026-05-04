@@ -29,6 +29,7 @@ export const designSystem = {
   // Layout
   layout: {
     container: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8',
+    containerExpanded: 'max-w-none mx-auto px-4 sm:px-6 lg:px-8',
     section: 'py-8',
     card: 'bg-white rounded-lg shadow-sm border border-gray-200',
     cardPadding: 'p-6',
@@ -132,6 +133,10 @@ export const getStatCardClasses = (color = 'blue') => ({
   icon: `${designSystem.components.stat.icon} bg-${color}-50`,
   iconColor: `text-${color}-600`,
 });
+
+export const getContainerClasses = (sidebarCollapsed = false) => {
+  return sidebarCollapsed ? designSystem.layout.containerExpanded : designSystem.layout.container;
+};
 
 export const getButtonClasses = (variant = 'primary', size = 'md') => {
   const baseClasses = designSystem.components.button[variant] || designSystem.components.button.primary;

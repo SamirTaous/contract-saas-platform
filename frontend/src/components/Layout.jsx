@@ -18,6 +18,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSidebar } from '../contexts/SidebarContext';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
 import axios from 'axios';
 
@@ -28,9 +29,9 @@ const orgApi = setupApiInterceptors(axios.create({
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
+  const { sidebarCollapsed, setSidebarCollapsed } = useSidebar();
   const [organization, setOrganization] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
