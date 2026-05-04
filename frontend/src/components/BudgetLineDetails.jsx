@@ -266,39 +266,36 @@ const BudgetLineDetails = () => {
             <nav className="-mb-px flex space-x-8">
               <button
                 onClick={() => setActiveTab('details')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'details'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'details'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 <div className="flex items-center space-x-2">
                   <FileText className="h-4 w-4" />
                   <span>Détails</span>
                 </div>
               </button>
-              
+
               <button
                 onClick={() => setActiveTab('charts')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'charts'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'charts'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 <div className="flex items-center space-x-2">
                   <BarChart3 className="h-4 w-4" />
                   <span>Graphiques</span>
                 </div>
               </button>
-              
+
               <button
                 onClick={() => setActiveTab('realtime')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'realtime'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'realtime'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 <div className="flex items-center space-x-2">
                   <Activity className="h-4 w-4" />
@@ -307,11 +304,10 @@ const BudgetLineDetails = () => {
               </button>
               <button
                 onClick={() => setActiveTab('analytics')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'analytics'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'analytics'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 <div className="flex items-center space-x-2">
                   <TrendingUp className="h-4 w-4" />
@@ -585,11 +581,10 @@ const BudgetLineDetails = () => {
 
                     <div className="w-full bg-gray-200 rounded-full h-3">
                       <div
-                        className={`h-3 rounded-full transition-all duration-300 ${
-                          ((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100) >= 90 ? 'bg-red-500' :
+                        className={`h-3 rounded-full transition-all duration-300 ${((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100) >= 90 ? 'bg-red-500' :
                           ((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100) >= 75 ? 'bg-orange-500' :
-                          ((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100) >= 50 ? 'bg-yellow-500' : 'bg-green-500'
-                        }`}
+                            ((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100) >= 50 ? 'bg-yellow-500' : 'bg-green-500'
+                          }`}
                         style={{ width: `${Math.min(((budgetLine.spentAmount || 0) / (budgetLine.initialAmount || 1) * 100), 100)}%` }}
                       ></div>
                     </div>
@@ -637,7 +632,7 @@ const BudgetLineDetails = () => {
                     <span className="text-gray-700 font-medium">Générer un Rapport</span>
                   </button>
 
-                  <button 
+                  <button
                     onClick={() => setActiveTab('analytics')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-purple-50 rounded-lg transition-colors border border-gray-200"
                   >

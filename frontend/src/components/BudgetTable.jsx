@@ -17,10 +17,12 @@ import {
   TrendingDown,
   AlertTriangle,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  Upload
 } from 'lucide-react';
 import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
+import BudgetImport from './BudgetImport';
 
 const budgetApi = setupApiInterceptors(axios.create({
   baseURL: 'http://localhost:8082/api/budget'
@@ -37,6 +39,7 @@ const BudgetTable = () => {
   const [sortDirection, setSortDirection] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
     fetchBudgetLines();
@@ -195,6 +198,14 @@ const BudgetTable = () => {
               >
                 <RefreshCw className="h-4 w-4" />
                 <span>Actualiser</span>
+              </button>
+              
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Upload className="h-4 w-4" />
+                <span>Importer Excel</span>
               </button>
               
               <button
@@ -491,6 +502,34 @@ const BudgetTable = () => {
             </div>
           )}
         </div>
+
+        {/* Import Modal */}
+        {showImportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Import Excel - Lignes Budgétaires</h2>
+                <button
+                  onClick={() => setShowImportModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="p-6">
+                <BudgetImport 
+                  onImportSuccess={() => {
+                    setShowImportModal(false);
+                    fetchBudgetLines(); // Refresh the budget lines after successful import
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
