@@ -140,6 +140,40 @@ const BudgetCharts = ({ budgetLine, className = '' }) => {
     }
   };
 
+  // Pie chart specific options (no axes)
+  const pieChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          label: function(context) {
+            const value = context.parsed || 0;
+            return `${context.label}: ${new Intl.NumberFormat('fr-MA', {
+              style: 'currency',
+              currency: 'MAD',
+              minimumFractionDigits: 0
+            }).format(value)}`;
+          }
+        }
+      }
+    }
+  };
+
   // Budget evolution over time (Line Chart) - Real data
   const utilizationChartData = {
     labels: historicalData.map(d => d.month),
@@ -177,9 +211,9 @@ const BudgetCharts = ({ budgetLine, className = '' }) => {
     datasets: [
       {
         data: [
-          committedAmount - spentAmount, // Committed but not spent
-          spentAmount, // Actually spent
-          remainingAmount // Available
+          Math.max(0, (committedAmount || 0) - (spentAmount || 0)), // Committed but not spent
+          spentAmount || 0, // Actually spent
+          Math.max(0, remainingAmount || 0) // Available
         ],
         backgroundColor: [
           'rgba(245, 158, 11, 0.8)', // Orange for committed
@@ -252,15 +286,7 @@ const BudgetCharts = ({ budgetLine, className = '' }) => {
       id: 'breakdown',
       name: 'Répartition Budget',
       icon: PieChart,
-      component: <Doughnut data={breakdownChartData} options={{
-        ...chartOptions,
-        plugins: {
-          ...chartOptions.plugins,
-          legend: {
-            position: 'bottom'
-          }
-        }
-      }} />
+      component: <Doughnut data={breakdownChartData} options={pieChartOptions} />
     },
     {
       id: 'utilization',
