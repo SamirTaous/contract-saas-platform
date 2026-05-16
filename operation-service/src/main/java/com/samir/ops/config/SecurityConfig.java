@@ -40,6 +40,8 @@ public class SecurityConfig {
                         // Only ADMINS can import budget files
                         .requestMatchers("/api/budget/import").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/budget/all").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/projects/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/decomptes/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                         // All other API endpoints require a valid login
                         .anyRequest().authenticated()
