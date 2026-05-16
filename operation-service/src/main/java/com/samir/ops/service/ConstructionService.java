@@ -57,6 +57,15 @@ public class ConstructionService {
     }
 
     /**
+     * View all projects to date
+     */
+
+    public List<ProjectResponse> listProjects(UserContext user) {
+        return projectRepository.findAllByOrganizationId(user.getOrgId()).stream()
+                .map(project -> mapToProjectResponse(project)).toList();
+    }
+
+    /**
      * 2. Create a Décompte (Bill) against a Project.
      */
     @Transactional
@@ -148,4 +157,5 @@ public class ConstructionService {
                 .projectName(d.getProject().getName())
                 .build();
     }
+
 }

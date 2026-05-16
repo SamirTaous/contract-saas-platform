@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -23,6 +24,12 @@ public class ConstructionController {
     public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectRequest req, @RequestHeader("Authorization") String token) {
         UserContext user = jwtUtils.getUserContext(token);
         return ResponseEntity.ok(constructionService.createProject(req, user));
+    }
+
+    @GetMapping("/projects/")
+    public ResponseEntity<List<ProjectResponse>> listProjects(@RequestHeader("Authorization") String token){
+        UserContext user = jwtUtils.getUserContext(token);
+        return ResponseEntity.ok(constructionService.listProjects(user));
     }
 
     @PostMapping("/decomptes/create")
