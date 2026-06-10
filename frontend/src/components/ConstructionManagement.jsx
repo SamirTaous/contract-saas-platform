@@ -76,10 +76,51 @@ const ConstructionManagement = () => {
       setMarkets(signedMarkets);
       setProjects(projectData);
       
-      // Fetch decomptes for all projects
+      // Fetch all decomptes from backend
       if (projectData.length > 0) {
-        // Note: The current backend doesn't have a get all decomptes endpoint
-        // We'll implement this when needed or create the endpoint
+        try {
+          // Try to fetch all decomptes
+          const decomptesResponse = await operationApi.get('/decomptes/all');
+          let allDecomptes = decomptesResponse.data;
+          
+          // Enrich decomptes with project information for display
+          allDecomptes = allDecomptes.map(decompte => {
+            const associatedProject = projectData.find(p => p.uuid === decompte.projectUuid);
+            return {
+              ...decompte,
+              projectName: associatedProject ? associatedProject.name : 'Projet inconnu',
+              project: associatedProject
+            };
+          });
+          
+          console.log('Fetched decomptes:', allDecomptes);
+          setDecomptes(allDecomptes);
+        } catch (decompteError) {
+          console.warn('Could not fetch all decomptes, trying individual project decomptes:', decompteError);
+          
+          // Fallback: fetch decomptes for each project individually
+          try {
+            const allDecomptes = [];
+            for (const project of projectData) {
+              try {
+                const projectDecomptesResponse = await operationApi.get(`/decomptes/project/${project.uuid}`);
+                const projectDecomptes = projectDecomptesResponse.data.map(decompte => ({
+                  ...decompte,
+                  projectName: project.name,
+                  project: project
+                }));
+                allDecomptes.push(...projectDecomptes);
+              } catch (projectDecompteError) {
+                console.warn(`Could not fetch decomptes for project ${project.uuid}:`, projectDecompteError);
+              }
+            }
+            setDecomptes(allDecomptes);
+          } catch (individualError) {
+            console.warn('Could not fetch individual project decomptes:', individualError);
+            setDecomptes([]);
+          }
+        }
+      } else {
         setDecomptes([]);
       }
       
@@ -182,13 +223,27 @@ const ConstructionManagement = () => {
     const avgProgress = totalProjects > 0 
       ? projects.reduce((sum, project) => sum + (project.physicalProgress || 0), 0) / totalProjects 
       : 0;
+    
+    // Comprehensive decompte statistics
+    const totalDecomptes = decomptes.length;
     const pendingDecomptes = decomptes.filter(d => d.status === 'PENDING').length;
+    const paidDecomptes = decomptes.filter(d => d.status === 'PAID').length;
+    const rejectedDecomptes = decomptes.filter(d => d.status === 'REJECTED').length;
+    const totalDecomptesAmount = decomptes.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const pendingDecomptesAmount = decomptes
+      .filter(d => d.status === 'PENDING')
+      .reduce((sum, d) => sum + (d.amount || 0), 0);
 
     return {
       totalProjects,
       totalPaidAmount,
       avgProgress,
-      pendingDecomptes
+      totalDecomptes,
+      pendingDecomptes,
+      paidDecomptes,
+      rejectedDecomptes,
+      totalDecomptesAmount,
+      pendingDecomptesAmount
     };
   };
 
@@ -318,12 +373,16 @@ const ConstructionManagement = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex space-x-4 text-sm">
                     <div>
-                      <span className="text-2xl font-bold text-green-600">{decomptes.length}</span>
+                      <span className="text-2xl font-bold text-green-600">{stats.totalDecomptes}</span>
                       <p className="text-gray-500">Total</p>
                     </div>
                     <div>
                       <span className="text-2xl font-bold text-yellow-600">{stats.pendingDecomptes}</span>
                       <p className="text-gray-500">En attente</p>
+                    </div>
+                    <div>
+                      <span className="text-2xl font-bold text-blue-600">{stats.paidDecomptes}</span>
+                      <p className="text-gray-500">Payés</p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm">
