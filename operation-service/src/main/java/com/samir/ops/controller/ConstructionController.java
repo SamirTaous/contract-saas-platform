@@ -32,6 +32,15 @@ public class ConstructionController {
         return ResponseEntity.ok(constructionService.listProjects(user));
     }
 
+    @GetMapping("/projects/{uuid}")
+    public ResponseEntity<ProjectDetailsResponse> getProjectDetails(
+            @PathVariable UUID uuid,
+            @RequestHeader("Authorization") String token) {
+
+        UserContext user = jwtUtils.getUserContext(token);
+        return ResponseEntity.ok(constructionService.getProjectDetails(uuid, user));
+    }
+
     @PostMapping("/decomptes/create")
     public ResponseEntity<DecompteResponse> createDecompte(@RequestBody DecompteRequest req, @RequestHeader("Authorization") String token) {
         UserContext user = jwtUtils.getUserContext(token);

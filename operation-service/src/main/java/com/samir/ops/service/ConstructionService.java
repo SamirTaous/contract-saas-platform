@@ -1,6 +1,7 @@
 package com.samir.ops.service;
 
 import com.samir.ops.dto.*;
+import com.samir.ops.exception.UnauthorizedAccessException;
 import com.samir.ops.model.*;
 import com.samir.ops.repository.DecompteRepository;
 import com.samir.ops.repository.MarketRepository;
@@ -92,7 +93,6 @@ public class ConstructionService {
 
     /**
      * 3. VALIDATE & PAY (The "Liquidation" Phase).
-     * This is the most important logic for your PFE.
      */
     @Transactional
     public void validateAndPay(UUID decompteUuid, UserContext user) {
@@ -133,6 +133,39 @@ public class ConstructionService {
                 .stream()
                 .map(this::mapToProjectResponse)
                 .toList();
+    }
+
+
+    public ProjectDetailsResponse getProjectDetails(UUID projectUuid, UserContext user) {
+        // 1. Find the project
+        Project project = projectRepository.findByUuid(projectUuid)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        // 2. Multi-tenancy check
+        if (!project.getOrganizationId().equals(user.getOrgId())) {
+            throw new UnauthorizedAccessException();
+        }
+
+        // 3. Find all decomptes associated with this project
+        List<Decompte> decomptes = decompteRepository.findByProjectId(project.getId());
+
+        // 4. Map the decomptes to their clean DTO format
+        List<DecompteResponse> decompteResponses = decomptes.stream()
+                .map(this::mapToDecompteResponse)
+                .toList();
+
+        // 5. Build and return the detailed response
+        return ProjectDetailsResponse.builder()
+                .uuid(project.getUuid())
+                .name(project.getName())
+                .physicalProgress(project.getPhysicalProgress())
+                .totalPaidAmount(project.getTotalPaidAmount())
+                .contractTotalAmount(project.getMarket().getTotalAmount())
+                .marketTitle(project.getMarket().getTitle())
+                .marketSupplier(project.getMarket().getSupplier())
+                .budgetLineCode(project.getMarket().getBudgetLine().getFullCode())
+                .decomptes(decompteResponses)
+                .build();
     }
 
     // helper functions
