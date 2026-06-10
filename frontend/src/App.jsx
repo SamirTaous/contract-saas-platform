@@ -7,6 +7,11 @@ import BudgetTable from './components/BudgetTable';
 import BudgetDashboard from './components/BudgetDashboard';
 import BudgetLineDetails from './components/BudgetLineDetails';
 import MarketManagement from './components/MarketManagement';
+import ConstructionManagement from './components/ConstructionManagement';
+import ConstructionProjects from './components/construction/ConstructionProjects';
+import ConstructionDecomptes from './components/construction/ConstructionDecomptes';
+import ProjectDetailsView from './components/construction/ProjectDetailsView';
+import DecompteDetailsView from './components/construction/DecompteDetailsView';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -25,6 +30,11 @@ function App() {
             <Route path="budget/analytics" element={<BudgetDashboard />} />
             <Route path="budget/line/:id" element={<BudgetLineDetails />} />
             <Route path="markets" element={<MarketManagement />} />
+            <Route path="construction" element={<ConstructionManagement />} />
+            <Route path="construction/projects" element={<ConstructionProjects />} />
+            <Route path="construction/projects/:id" element={<ProjectDetailsView />} />
+            <Route path="construction/decomptes" element={<ConstructionDecomptes />} />
+            <Route path="construction/decomptes/:id" element={<DecompteDetailsView />} />
           </Route>
         </Routes>
       </AuthProvider>

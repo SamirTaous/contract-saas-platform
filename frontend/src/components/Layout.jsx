@@ -15,7 +15,8 @@ import {
   Building,
   FileText,
   BarChart3,
-  ChevronLeft
+  ChevronLeft,
+  Hammer
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSidebar } from '../contexts/SidebarContext';
@@ -122,6 +123,13 @@ const Layout = ({ children }) => {
       icon: Building, 
       adminOnly: true,
       description: 'Service Marché'
+    },
+    { 
+      name: 'Gestion de Construction', 
+      href: '/construction', 
+      icon: Hammer, 
+      adminOnly: true,
+      description: 'Projets et Décomptes'
     },
     { 
       name: 'Paramètres', 

@@ -13,7 +13,9 @@ import {
   RefreshCw,
   Upload,
   Eye,
-  PieChart
+  PieChart,
+  Hammer,
+  Building
 } from 'lucide-react';
 import { designSystem } from '../styles/designSystem';
 import StatCard from './ui/StatCard';
@@ -281,6 +283,33 @@ const Dashboard = () => {
                   onClick={() => navigate('/budget')}
                 >
                   Lignes Budgétaires
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  icon={Hammer}
+                  className="w-full justify-start"
+                  onClick={() => navigate('/construction')}
+                >
+                  Tableau de Bord Construction
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  icon={Building}
+                  className="w-full justify-start"
+                  onClick={() => navigate('/construction/projects')}
+                >
+                  Gérer les Projets
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  icon={FileText}
+                  className="w-full justify-start"
+                  onClick={() => navigate('/construction/decomptes')}
+                >
+                  Gérer les Décomptes
                 </Button>
 
                 <Button
