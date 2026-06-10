@@ -187,7 +187,10 @@ public class ConstructionService {
                 .label(d.getLabel())
                 .amount(d.getAmount())
                 .status(d.getStatus().toString())
+                .validationDate(d.getValidationDate())
                 .projectName(d.getProject().getName())
+                .projectUuid(d.getProject().getUuid())
+                .currentProjectProgress(d.getProject().getPhysicalProgress())
                 .build();
     }
 
