@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   Edit,
   Trash2,
-  Download
+  Download,
+  PieChart
 } from 'lucide-react';
 import axios from 'axios';
 import { useSidebar } from '../../contexts/SidebarContext';
@@ -39,6 +40,179 @@ import DecompteCard from './DecompteCard';
 const operationApi = setupApiInterceptors(axios.create({
   baseURL: 'http://localhost:8082/api'
 }));
+
+// Chart Components
+const CircularProgressChart = ({ percentage, size = 120, strokeWidth = 8, color = '#3B82F6', label, value }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="transform -rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#E5E7EB"
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={color}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-500 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-2xl font-bold" style={{ color }}>
+            {percentage.toFixed(1)}%
+          </span>
+        </div>
+      </div>
+      <div className="mt-2 text-center">
+        <p className="text-sm font-medium text-gray-700">{label}</p>
+        <p className="text-xs text-gray-500">{value}</p>
+      </div>
+    </div>
+  );
+};
+
+const DonutChart = ({ data, size = 140, strokeWidth = 20 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  
+  let cumulativePercentage = 0;
+  
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        {data.map((item, index) => {
+          const strokeDasharray = `${(item.percentage / 100) * circumference} ${circumference}`;
+          const strokeDashoffset = -cumulativePercentage * (circumference / 100);
+          cumulativePercentage += item.percentage;
+          
+          return (
+            <circle
+              key={index}
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={item.color}
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeDasharray={strokeDasharray}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              className="transition-all duration-500 ease-out"
+            />
+          );
+        })}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-bold text-gray-900">
+          {data.reduce((sum, item) => sum + item.value, 0)}
+        </span>
+        <span className="text-xs text-gray-500">Total</span>
+      </div>
+    </div>
+  );
+};
+
+const VerticalBarChart = ({ data, height = 100, maxValue }) => {
+  const max = maxValue || Math.max(...data.map(d => d.value));
+  
+  return (
+    <div className="flex items-end space-x-2" style={{ height }}>
+      {data.map((item, index) => {
+        const barHeight = (item.value / max) * (height - 20);
+        return (
+          <div key={index} className="flex flex-col items-center">
+            <div className="text-xs text-gray-600 mb-1">
+              {formatCurrency(item.value)}
+            </div>
+            <div
+              className="rounded-t transition-all duration-500 ease-out"
+              style={{
+                height: `${barHeight}px`,
+                width: '24px',
+                backgroundColor: item.color,
+                minHeight: '4px'
+              }}
+            />
+            <div className="text-xs text-gray-500 mt-1 text-center">
+              {item.label}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const TimelineChart = ({ decomptes }) => {
+  if (!decomptes || decomptes.length === 0) return null;
+
+  const sortedDecomptes = [...decomptes].sort((a, b) => 
+    new Date(a.validationDate || a.createdDate || 0) - new Date(b.validationDate || b.createdDate || 0)
+  );
+
+  let cumulativeAmount = 0;
+
+  return (
+    <div className="space-y-3">
+      {sortedDecomptes.map((decompte, index) => {
+        cumulativeAmount += parseFloat(decompte.amount) || 0;
+        const isPaid = decompte.status === 'PAID';
+        
+        return (
+          <div key={decompte.uuid} className="flex items-center space-x-3">
+            <div className="flex flex-col items-center">
+              <div className={`w-3 h-3 rounded-full border-2 ${
+                isPaid 
+                  ? 'bg-green-500 border-green-500' 
+                  : decompte.status === 'PENDING'
+                  ? 'bg-yellow-500 border-yellow-500'
+                  : 'bg-red-500 border-red-500'
+              }`} />
+              {index < sortedDecomptes.length - 1 && (
+                <div className="w-0.5 h-8 bg-gray-300 mt-1" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {decompte.label}
+                </p>
+                <p className="text-sm font-bold text-gray-900">
+                  {formatCurrency(parseFloat(decompte.amount) || 0)}
+                </p>
+              </div>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>
+                  {decompte.validationDate 
+                    ? new Date(decompte.validationDate).toLocaleDateString('fr-FR')
+                    : 'En attente'
+                  }
+                </span>
+                <span>Cumul: {formatCurrency(cumulativeAmount)}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const ProjectDetailsView = () => {
   const { id } = useParams();
@@ -215,315 +389,347 @@ const ProjectDetailsView = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className={getContainerClasses(sidebarCollapsed)}>
-        <div className={designSystem.layout.section}>
-          {/* Header */}
-          <PageHeader
-            title={project.name}
-            subtitle={project.marketTitle || 'Marché associé'}
-            icon={Building}
-            breadcrumb={[
-              { label: 'Construction', href: '/construction' },
-              { label: 'Projets', href: '/construction/projects' },
-              { label: project.name }
-            ]}
-            action={
-              <div className="flex items-center space-x-3">
+        <div className="py-4 space-y-4">
+          {/* Compact Header with Project Info */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
                 <Button
-                  variant="outline"
+                  variant="ghost"
+                  size="sm"
                   icon={ArrowLeft}
                   onClick={() => navigate('/construction/projects')}
-                >
-                  Retour
-                </Button>
-                <Button
-                  variant="secondary"
-                  icon={Plus}
-                  onClick={() => setShowCreateDecompte(true)}
-                >
-                  Nouveau Décompte
-                </Button>
+                />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                    <div className="flex items-center space-x-1">
+                      <Building className="h-4 w-4" />
+                      <span>{project.marketTitle}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <User className="h-4 w-4" />
+                      <span>{project.marketSupplier}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <FileText className="h-4 w-4" />
+                      <span>{project.budgetLineCode}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            }
-          />
-
-          {/* Project Statistics */}
-          <div className={`${designSystem.layout.grid.cols4} ${designSystem.layout.grid.gap} mb-8`}>
-            <StatCard
-              label="Progrès Physique"
-              value={`${stats.progressPercent.toFixed(1)}%`}
-              icon={Percent}
-              color="blue"
-            />
-            <StatCard
-              label="Progrès Financier"
-              value={`${stats.financialProgress.toFixed(1)}%`}
-              icon={TrendingUp}
-              color="green"
-            />
-            <StatCard
-              label="Total Décomptes"
-              value={stats.totalDecomptes}
-              icon={FileText}
-              color="purple"
-            />
-            <StatCard
-              label="En Attente"
-              value={stats.pendingDecomptes}
-              icon={Clock}
-              color="yellow"
-            />
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={() => setShowCreateDecompte(true)}
+              >
+                Nouveau Décompte
+              </Button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Project Details */}
-            <div className="xl:col-span-2 space-y-6">
-              {/* Main Project Info */}
-              <Card title="Détails du Projet" icon={Building}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Basic Info */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Nom du Projet</label>
-                      <p className="text-lg font-semibold text-gray-900 mt-1">{project.name}</p>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Marché Associé</label>
-                      <p className="text-gray-900 mt-1">{project.marketTitle || 'N/A'}</p>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Fournisseur</label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <User className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-900">{project.marketSupplier || 'N/A'}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Code Ligne Budgétaire</label>
-                      <p className="text-gray-900 mt-1">{project.budgetLineCode || 'N/A'}</p>
-                    </div>
-                  </div>
-
-                  {/* Financial Info */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Valeur du Contrat</label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <DollarSign className="h-4 w-4 text-gray-400" />
-                        <span className="text-xl font-bold text-gray-900">
-                          {formatCurrency(stats.contractAmount)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Montant Payé</label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                        <span className="text-xl font-bold text-green-600">
-                          {formatCurrency(stats.paidAmount)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Restant à Payer</label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <DollarSign className="h-4 w-4 text-gray-400" />
-                        <span className="text-xl font-bold text-gray-600">
-                          {formatCurrency(stats.contractAmount - stats.paidAmount)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+          {/* Compact Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Valeur Contrat</p>
+                  <p className="text-lg font-bold text-gray-900">{formatCurrency(stats.contractAmount)}</p>
                 </div>
-
-                {/* Progress Bars */}
-                <div className="mt-8 space-y-6">
-                  {/* Physical Progress */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <Percent className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium text-gray-700">Progrès Physique</span>
-                      </div>
-                      <span className="text-sm font-bold text-blue-600">
-                        {stats.progressPercent.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="h-3 rounded-full bg-blue-500 transition-all duration-300"
-                        style={{ width: `${Math.min(stats.progressPercent, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Financial Progress */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium text-gray-700">Progrès Financier</span>
-                      </div>
-                      <span className="text-sm font-bold text-green-600">
-                        {stats.financialProgress.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="h-3 rounded-full bg-green-500 transition-all duration-300"
-                        style={{ width: `${Math.min(stats.financialProgress, 100)}%` }}
-                      />
-                    </div>
-                  </div>
+                <DollarSign className="h-8 w-8 text-blue-500" />
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Montant Payé</p>
+                  <p className="text-lg font-bold text-green-600">{formatCurrency(stats.paidAmount)}</p>
                 </div>
-              </Card>
+                <TrendingUp className="h-8 w-8 text-green-500" />
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Progrès Physique</p>
+                  <p className="text-lg font-bold text-blue-600">{stats.progressPercent.toFixed(1)}%</p>
+                </div>
+                <Percent className="h-8 w-8 text-blue-500" />
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Décomptes ({stats.totalDecomptes})</p>
+                  <p className="text-lg font-bold text-purple-600">{stats.pendingDecomptes} en attente</p>
+                </div>
+                <Clock className="h-8 w-8 text-purple-500" />
+              </div>
+            </div>
+          </div>
 
-              {/* Decomptes List */}
-              <Card 
-                title="Décomptes du Projet" 
-                icon={FileText}
-                action={
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={Plus}
-                    onClick={() => setShowCreateDecompte(true)}
-                  >
-                    Nouveau
-                  </Button>
-                }
-              >
-                {decomptes.length === 0 ? (
-                  <EmptyState
-                    icon={FileText}
-                    title="Aucun Décompte"
-                    description="Ce projet n'a pas encore de décomptes de paiement."
-                    action={
-                      <Button
-                        variant="primary"
-                        icon={Plus}
-                        onClick={() => setShowCreateDecompte(true)}
-                      >
-                        Créer le Premier Décompte
-                      </Button>
+          {/* Progress & Analytics Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            
+            {/* Circular Progress Charts */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <PieChart className="h-5 w-5 mr-2 text-blue-600" />
+                Progression
+              </h3>
+              <div className="flex justify-around">
+                <CircularProgressChart
+                  percentage={stats.progressPercent}
+                  color="#3B82F6"
+                  label="Physique"
+                  value={`${stats.progressPercent.toFixed(1)}%`}
+                  size={100}
+                />
+                <CircularProgressChart
+                  percentage={stats.financialProgress}
+                  color="#10B981"
+                  label="Financier"
+                  value={`${stats.financialProgress.toFixed(1)}%`}
+                  size={100}
+                />
+              </div>
+            </div>
+
+            {/* Financial Breakdown Donut Chart */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+                Répartition Financière
+              </h3>
+              <div className="flex items-center space-x-4">
+                <DonutChart
+                  size={120}
+                  data={[
+                    {
+                      percentage: stats.financialProgress,
+                      value: Math.round(stats.paidAmount / 1000),
+                      color: '#10B981',
+                      label: 'Payé'
+                    },
+                    {
+                      percentage: 100 - stats.financialProgress,
+                      value: Math.round((stats.contractAmount - stats.paidAmount) / 1000),
+                      color: '#E5E7EB',
+                      label: 'Restant'
                     }
+                  ]}
+                />
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Payé</p>
+                      <p className="text-xs text-gray-500">{formatCurrency(stats.paidAmount)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-gray-300 rounded-full" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Restant</p>
+                      <p className="text-xs text-gray-500">{formatCurrency(stats.contractAmount - stats.paidAmount)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Decomptes Status Breakdown */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2 text-purple-600" />
+                Statut Décomptes
+              </h3>
+              {stats.totalDecomptes > 0 ? (
+                <div className="space-y-3">
+                  <DonutChart
+                    size={120}
+                    data={[
+                      {
+                        percentage: (stats.paidDecomptes / stats.totalDecomptes) * 100,
+                        value: stats.paidDecomptes,
+                        color: '#10B981',
+                        label: 'Payés'
+                      },
+                      {
+                        percentage: (stats.pendingDecomptes / stats.totalDecomptes) * 100,
+                        value: stats.pendingDecomptes,
+                        color: '#F59E0B',
+                        label: 'En attente'
+                      },
+                      {
+                        percentage: ((stats.totalDecomptes - stats.paidDecomptes - stats.pendingDecomptes) / stats.totalDecomptes) * 100,
+                        value: stats.totalDecomptes - stats.paidDecomptes - stats.pendingDecomptes,
+                        color: '#EF4444',
+                        label: 'Rejetés'
+                      }
+                    ].filter(item => item.percentage > 0)}
                   />
-                ) : (
-                  <div className="space-y-4">
-                    {decomptes.map((decompte) => (
-                      <DecompteCard
-                        key={decompte.uuid}
-                        decompte={decompte}
-                        onPay={handlePayDecompte}
-                        showProject={false}
-                      />
-                    ))}
-                    
-                    {decomptes.length > 5 && (
-                      <div className="text-center pt-4 border-t border-gray-200">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/construction/decomptes?project=${id}`)}
-                        >
-                          Voir Tous les Décomptes ({decomptes.length})
-                        </Button>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                        <span>Payés</span>
+                      </div>
+                      <span className="font-medium">{stats.paidDecomptes}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                        <span>En attente</span>
+                      </div>
+                      <span className="font-medium">{stats.pendingDecomptes}</span>
+                    </div>
+                    {stats.totalDecomptes - stats.paidDecomptes - stats.pendingDecomptes > 0 && (
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full" />
+                          <span>Rejetés</span>
+                        </div>
+                        <span className="font-medium">{stats.totalDecomptes - stats.paidDecomptes - stats.pendingDecomptes}</span>
                       </div>
                     )}
                   </div>
+                </div>
+              ) : (
+                <div className="text-center text-gray-500">
+                  <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Aucun décompte</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Financial Analysis Charts */}
+          {decomptes.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              
+              {/* Decomptes Amount Bar Chart */}
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <BarChart3 className="h-5 w-5 mr-2 text-indigo-600" />
+                  Montants par Décompte
+                </h3>
+                <VerticalBarChart
+                  data={decomptes.slice(0, 6).map((decompte, index) => ({
+                    label: `D${index + 1}`,
+                    value: parseFloat(decompte.amount) || 0,
+                    color: decompte.status === 'PAID' ? '#10B981' : 
+                           decompte.status === 'PENDING' ? '#F59E0B' : '#EF4444'
+                  }))}
+                  height={120}
+                />
+                <div className="mt-3 flex items-center space-x-4 text-xs">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>Payé</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                    <span>En attente</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-red-500 rounded-full" />
+                    <span>Rejeté</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Timeline */}
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
+                  Chronologie des Paiements
+                </h3>
+                <div className="max-h-32 overflow-y-auto">
+                  <TimelineChart decomptes={decomptes} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Decomptes Section */}
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-5 w-5 text-purple-600" />
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Décomptes du Projet ({stats.totalDecomptes})
+                </h3>
+              </div>
+              <div className="flex items-center space-x-2">
+                {stats.pendingDecomptes > 0 && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {stats.pendingDecomptes} en attente
+                  </span>
                 )}
-              </Card>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={Eye}
+                  onClick={() => navigate(`/construction/decomptes?project=${id}`)}
+                >
+                  Voir Tout
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={Plus}
+                  onClick={() => setShowCreateDecompte(true)}
+                >
+                  Nouveau
+                </Button>
+              </div>
             </div>
 
-            {/* Sidebar */}
-            <div className="xl:col-span-1 space-y-6">
-              {/* Quick Stats */}
-              <Card title="Résumé" icon={BarChart3}>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center space-x-2">
-                      <Building className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-700">Statut Projet</span>
+            <div className="p-4">
+              {decomptes.length === 0 ? (
+                <EmptyState
+                  icon={FileText}
+                  title="Aucun Décompte"
+                  description="Ce projet n'a pas encore de décomptes de paiement."
+                  action={
+                    <Button
+                      variant="primary"
+                      icon={Plus}
+                      onClick={() => setShowCreateDecompte(true)}
+                    >
+                      Créer le Premier Décompte
+                    </Button>
+                  }
+                />
+              ) : (
+                <div className="grid gap-3">
+                  {decomptes.slice(0, 5).map((decompte) => (
+                    <DecompteCard
+                      key={decompte.uuid}
+                      decompte={decompte}
+                      onPay={handlePayDecompte}
+                      showProject={false}
+                    />
+                  ))}
+                  
+                  {decomptes.length > 5 && (
+                    <div className="text-center pt-3 border-t border-gray-200">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/construction/decomptes?project=${id}`)}
+                      >
+                        Voir Tous les Décomptes (+{decomptes.length - 5} de plus)
+                      </Button>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      stats.progressPercent >= 100 
-                        ? 'bg-green-100 text-green-800 border border-green-200'
-                        : 'bg-blue-100 text-blue-800 border border-blue-200'
-                    }`}>
-                      {stats.progressPercent >= 100 ? 'Terminé' : 'En Cours'}
-                    </span>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Décomptes Total</span>
-                      <span className="font-medium text-gray-900">{stats.totalDecomptes}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">En Attente</span>
-                      <span className="font-medium text-yellow-600">{stats.pendingDecomptes}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Payés</span>
-                      <span className="font-medium text-green-600">{stats.paidDecomptes}</span>
-                    </div>
-
-                    <div className="pt-3 border-t border-gray-200">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Montant Total</span>
-                        <span className="font-bold text-gray-900">
-                          {formatCurrency(stats.totalDecomptesAmount)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card title="Actions" icon={Settings}>
-                <div className="space-y-3">
-                  <Button
-                    variant="primary"
-                    icon={Plus}
-                    className="w-full"
-                    onClick={() => setShowCreateDecompte(true)}
-                  >
-                    Nouveau Décompte
-                  </Button>
-
-                  <Button
-                    variant="secondary"
-                    icon={Eye}
-                    className="w-full"
-                    onClick={() => navigate(`/construction/decomptes?project=${id}`)}
-                  >
-                    Voir Décomptes
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    icon={Download}
-                    className="w-full"
-                  >
-                    Exporter Rapport
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    icon={BarChart3}
-                    className="w-full"
-                  >
-                    Analyses
-                  </Button>
-                </div>
-              </Card>
+              )}
             </div>
           </div>
 
