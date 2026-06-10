@@ -168,6 +168,33 @@ public class ConstructionService {
                 .build();
     }
 
+    public List<DecompteResponse> getMyDecomptes(UserContext user) {
+        List<Decompte> decomptes;
+
+        if ("SUPER_ADMIN".equals(user.getRole())) {
+            decomptes = decompteRepository.findAll();
+        } else {
+            decomptes = decompteRepository.findAllByOrganizationId(user.getOrgId());
+        }
+
+        return decomptes.stream()
+                .map(this::mapToDecompteResponse)
+                .toList();
+    }
+
+    public List<DecompteResponse> getAllDecomptes(UserContext user) {
+        // Only SUPER_ADMIN can see all decomptes across all organizations
+        if (!"SUPER_ADMIN".equals(user.getRole())) {
+            throw new UnauthorizedAccessException();
+        }
+
+        List<Decompte> decomptes = decompteRepository.findAll();
+
+        return decomptes.stream()
+                .map(this::mapToDecompteResponse)
+                .toList();
+    }
+
     // helper functions
 
     private ProjectResponse mapToProjectResponse(Project p) {

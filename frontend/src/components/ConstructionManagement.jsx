@@ -80,7 +80,7 @@ const ConstructionManagement = () => {
       if (projectData.length > 0) {
         try {
           // Try to fetch all decomptes
-          const decomptesResponse = await operationApi.get('/decomptes/all');
+          const decomptesResponse = await operationApi.get('/decomptes');
           let allDecomptes = decomptesResponse.data;
           
           // Enrich decomptes with project information for display

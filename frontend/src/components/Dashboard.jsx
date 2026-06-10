@@ -30,10 +30,15 @@ const budgetApi = setupApiInterceptors(axios.create({
   baseURL: 'http://localhost:8082/api/budget'
 }));
 
+const operationApi = setupApiInterceptors(axios.create({
+  baseURL: 'http://localhost:8082/api'
+}));
+
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [budgetData, setBudgetData] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [decomptesData, setDecomptesData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -89,6 +94,44 @@ const Dashboard = () => {
         criticalLines,
         budgetLines: budgetLines.slice(0, 5) // Top 5 for recent activity
       });
+
+      // Fetch decomptes data
+      try {
+        const decomptesResponse = await operationApi.get('/decomptes');
+        const decomptes = decomptesResponse.data;
+
+        // Calculate decomptes statistics
+        const totalDecomptes = decomptes.length;
+        const pendingDecomptes = decomptes.filter(d => d.status === 'PENDING').length;
+        const paidDecomptes = decomptes.filter(d => d.status === 'PAID').length;
+        const rejectedDecomptes = decomptes.filter(d => d.status === 'REJECTED').length;
+        const totalDecomptesAmount = decomptes.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+        const paidDecomptesAmount = decomptes
+          .filter(d => d.status === 'PAID')
+          .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+
+        setDecomptesData({
+          totalDecomptes,
+          pendingDecomptes,
+          paidDecomptes,
+          rejectedDecomptes,
+          totalDecomptesAmount,
+          paidDecomptesAmount,
+          decomptes: decomptes.slice(0, 3) // Top 3 for recent activity
+        });
+      } catch (decomptesError) {
+        console.warn('Could not fetch decomptes data:', decomptesError);
+        // Set default decomptes data if API fails
+        setDecomptesData({
+          totalDecomptes: 0,
+          pendingDecomptes: 0,
+          paidDecomptes: 0,
+          rejectedDecomptes: 0,
+          totalDecomptesAmount: 0,
+          paidDecomptesAmount: 0,
+          decomptes: []
+        });
+      }
 
       // Fetch user data
       try {
@@ -157,7 +200,7 @@ const Dashboard = () => {
     );
   }
 
-  if (!user || !budgetData || !userData) {
+  if (!user || !budgetData || !userData || !decomptesData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -175,18 +218,18 @@ const Dashboard = () => {
       color: 'blue'
     },
     {
+      name: 'Décomptes Total',
+      value: decomptesData.totalDecomptes.toString(),
+      change: `${decomptesData.pendingDecomptes} en attente • ${decomptesData.paidDecomptes} payés`,
+      icon: Building,
+      color: 'purple'
+    },
+    {
       name: 'Utilisateurs Actifs',
       value: userData.activeUsers.toString(),
       change: `${userData.adminUsers} Admin${userData.adminUsers > 1 ? 's' : ''}`,
       icon: Users,
       color: 'green'
-    },
-    {
-      name: 'Lignes Critiques',
-      value: budgetData.criticalLines.toString(),
-      change: '>90% utilisé',
-      icon: AlertTriangle,
-      color: budgetData.criticalLines > 0 ? 'red' : 'yellow'
     },
     {
       name: 'Taux d\'Utilisation',
@@ -199,17 +242,22 @@ const Dashboard = () => {
 
   // Generate real recent activity based on system data
   const recentActivity = [
-    ...budgetData.budgetLines.slice(0, 3).map((line) => ({
+    ...budgetData.budgetLines.slice(0, 2).map((line) => ({
       action: 'Ligne budgétaire',
       contract: `${line.fullCode} - ${formatCurrency(line.initialAmount)}`,
       time: `Utilisation: ${line.initialAmount > 0 ? ((line.committedAmount / line.initialAmount) * 100).toFixed(1) : 0}%`
     })),
-    ...userData.recentUsers.map(user => ({
+    ...decomptesData.decomptes.map(decompte => ({
+      action: 'Décompte',
+      contract: `${decompte.label} - ${formatCurrency(decompte.amount)}`,
+      time: `Statut: ${decompte.status === 'PAID' ? 'Payé' : decompte.status === 'PENDING' ? 'En attente' : 'Rejeté'}`
+    })),
+    ...userData.recentUsers.slice(0, 1).map(user => ({
       action: 'Utilisateur actif',
       contract: `${user.username} (${user.role || 'USER'})`,
       time: user.email || 'Pas d\'email'
     }))
-  ].slice(0, 4);
+  ].slice(0, 5);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -476,6 +524,109 @@ const Dashboard = () => {
                     <span>100%</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Decomptes Overview Section */}
+          {decomptesData && (
+            <div className="mt-8">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <Building className="h-5 w-5 text-purple-600" />
+                    <span>Décomptes de Construction</span>
+                  </h3>
+                  <button
+                    onClick={() => navigate('/construction/decomptes')}
+                    className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                  >
+                    Voir tous les décomptes →
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-purple-700">Total Décomptes</p>
+                        <p className="text-xl font-bold text-purple-900 mt-1">
+                          {decomptesData.totalDecomptes}
+                        </p>
+                      </div>
+                      <FileText className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-yellow-700">En Attente</p>
+                        <p className="text-xl font-bold text-yellow-900 mt-1">
+                          {decomptesData.pendingDecomptes}
+                        </p>
+                      </div>
+                      <AlertTriangle className="h-8 w-8 text-yellow-600" />
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-700">Payés</p>
+                        <p className="text-xl font-bold text-green-900 mt-1">
+                          {decomptesData.paidDecomptes}
+                        </p>
+                      </div>
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    </div>
+                  </div>
+
+                  <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-indigo-700">Montant Total</p>
+                        <p className="text-xl font-bold text-indigo-900 mt-1">
+                          {formatCurrency(decomptesData.totalDecomptesAmount)}
+                        </p>
+                      </div>
+                      <DollarSign className="h-8 w-8 text-indigo-600" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Decomptes */}
+                {decomptesData.decomptes.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Décomptes Récents</h4>
+                    <div className="space-y-2">
+                      {decomptesData.decomptes.map((decompte) => (
+                        <div key={decompte.uuid} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <FileText className="h-4 w-4 text-purple-600" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{decompte.label}</p>
+                              <p className="text-xs text-gray-500">{decompte.projectName}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-bold text-gray-900">
+                              {formatCurrency(decompte.amount)}
+                            </p>
+                            <p className={`text-xs px-2 py-1 rounded-full ${
+                              decompte.status === 'PAID' ? 'bg-green-100 text-green-800' :
+                              decompte.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {decompte.status === 'PAID' ? 'Payé' : 
+                               decompte.status === 'PENDING' ? 'En Attente' : 'Rejeté'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

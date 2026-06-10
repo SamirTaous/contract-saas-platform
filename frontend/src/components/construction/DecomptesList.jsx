@@ -47,14 +47,16 @@ const DecomptesList = () => {
       setLoading(true);
       setError(null);
       
-      // Fetch projects first, then we'll need to fetch decomptes for each
+      // Fetch all decomptes using the correct endpoint
+      const decomptesResponse = await operationApi.get('/decomptes');
+      const decomptesData = decomptesResponse.data;
+      
+      // Fetch projects to get project names
       const projectsResponse = await operationApi.get('/projects/');
       const projectsData = projectsResponse.data;
-      setProjects(projectsData);
       
-      // For now, we'll use mock data for decomptes since there's no "get all decomptes" endpoint
-      // In a real implementation, you'd add this endpoint to the backend
-      setDecomptes([]);
+      setProjects(projectsData);
+      setDecomptes(decomptesData);
       
     } catch (err) {
       console.error('Failed to fetch decomptes data:', err);
@@ -118,8 +120,8 @@ const DecomptesList = () => {
 
   const filteredDecomptes = decomptes.filter(decompte => {
     const matchesSearch = decompte.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         decompte.projectName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || decompte.status === statusFilter;
+                         (decompte.projectName && decompte.projectName.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = statusFilter === 'all' || decompte.status === statusFilter.toUpperCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -127,8 +129,8 @@ const DecomptesList = () => {
     const total = decomptes.length;
     const pending = decomptes.filter(d => d.status === 'PENDING').length;
     const paid = decomptes.filter(d => d.status === 'PAID').length;
-    const totalAmount = decomptes.reduce((sum, d) => sum + (d.amount || 0), 0);
-    const paidAmount = decomptes.filter(d => d.status === 'PAID').reduce((sum, d) => sum + (d.amount || 0), 0);
+    const totalAmount = decomptes.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+    const paidAmount = decomptes.filter(d => d.status === 'PAID').reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
 
     return { total, pending, paid, totalAmount, paidAmount };
   };
@@ -298,7 +300,7 @@ const DecomptesList = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-lg font-bold text-green-600">
-                            {formatCurrency(decompte.amount)}
+                            {formatCurrency(parseFloat(decompte.amount) || 0)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

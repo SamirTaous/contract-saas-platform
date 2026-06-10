@@ -47,6 +47,18 @@ public class ConstructionController {
         return ResponseEntity.ok(constructionService.createDecompte(req, user));
     }
 
+    @GetMapping("/decomptes")
+    public ResponseEntity<List<DecompteResponse>> listDecomptes(@RequestHeader("Authorization") String token) {
+        UserContext user = jwtUtils.getUserContext(token);
+        return ResponseEntity.ok(constructionService.getMyDecomptes(user));
+    }
+
+    @GetMapping("/decomptes/all")
+    public ResponseEntity<List<DecompteResponse>> listAllDecomptes(@RequestHeader("Authorization") String token) {
+        UserContext user = jwtUtils.getUserContext(token);
+        return ResponseEntity.ok(constructionService.getAllDecomptes(user));
+    }
+
     @PatchMapping("/decomptes/{uuid}/pay")
     public ResponseEntity<Void> pay(@PathVariable UUID uuid, @RequestHeader("Authorization") String token) {
         UserContext user = jwtUtils.getUserContext(token);

@@ -59,15 +59,13 @@ const ConstructionDecomptes = () => {
       setLoading(true);
       setError(null);
       
-      const [projectsResponse] = await Promise.all([
-        operationApi.get('/projects/')
+      const [projectsResponse, decomptesResponse] = await Promise.all([
+        operationApi.get('/projects/'),
+        operationApi.get('/decomptes')
       ]);
 
       setProjects(projectsResponse.data);
-      
-      // For now, we'll simulate decomptes data since the API doesn't have a get all endpoint
-      // In real implementation, you'd fetch from /decomptes/all or similar
-      setDecomptes([]);
+      setDecomptes(decomptesResponse.data);
       
     } catch (err) {
       console.error('Failed to fetch decomptes:', err);
@@ -123,9 +121,9 @@ const ConstructionDecomptes = () => {
     const pendingDecomptes = decomptes.filter(d => d.status === 'PENDING').length;
     const paidDecomptes = decomptes.filter(d => d.status === 'PAID').length;
     const rejectedDecomptes = decomptes.filter(d => d.status === 'REJECTED').length;
-    const totalAmount = decomptes.reduce((sum, decompte) => sum + (decompte.amount || 0), 0);
+    const totalAmount = decomptes.reduce((sum, decompte) => sum + (parseFloat(decompte.amount) || 0), 0);
     const paidAmount = decomptes.filter(d => d.status === 'PAID')
-      .reduce((sum, decompte) => sum + (decompte.amount || 0), 0);
+      .reduce((sum, decompte) => sum + (parseFloat(decompte.amount) || 0), 0);
 
     return {
       totalDecomptes,
@@ -227,7 +225,7 @@ const ConstructionDecomptes = () => {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Montant</span>
               <span className="text-2xl font-bold text-green-600">
-                {formatCurrency(decompte.amount)}
+                {formatCurrency(parseFloat(decompte.amount) || 0)}
               </span>
             </div>
           </div>
@@ -334,7 +332,7 @@ const ConstructionDecomptes = () => {
               <div className="text-center">
                 <p className="text-gray-600">Montant</p>
                 <p className="font-bold text-green-600">
-                  {formatCurrency(decompte.amount)}
+                  {formatCurrency(parseFloat(decompte.amount) || 0)}
                 </p>
               </div>
               
