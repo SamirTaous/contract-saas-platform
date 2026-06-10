@@ -62,39 +62,17 @@ const ProjectDetailsView = () => {
       setLoading(true);
       setError(null);
       
-      // Try the getProjectDetails endpoint with POST method (common for detail queries)
-      try {
-        const projectResponse = await operationApi.post('/projects/getProjectDetails', { 
-          projectUuid: id 
-        });
-        const projectData = projectResponse.data;
-        
-        setProject(projectData);
-        
-        // Set decomptes from the project details response
-        if (projectData.decomptes) {
-          setDecomptes(projectData.decomptes);
-        } else {
-          setDecomptes([]);
-        }
-        
-      } catch (detailsError) {
-        console.warn('getProjectDetails endpoint not available, using fallback:', detailsError);
-        
-        // Fallback to original endpoint structure
-        const projectResponse = await operationApi.get(`/projects/${id}`);
-        const projectData = projectResponse.data;
-        
-        setProject(projectData);
-        
-        // Try to fetch decomptes separately
-        try {
-          const decomptesResponse = await operationApi.get(`/decomptes/project/${id}`);
-          setDecomptes(decomptesResponse.data);
-        } catch (decompteError) {
-          console.warn('Could not fetch decomptes:', decompteError);
-          setDecomptes([]);
-        }
+      // Use the correct GET endpoint for project details
+      const projectResponse = await operationApi.get(`/projects/${id}`);
+      const projectData = projectResponse.data;
+      
+      setProject(projectData);
+      
+      // Set decomptes from the ProjectDetailsResponse - it includes all decomptes for this project
+      if (projectData.decomptes && Array.isArray(projectData.decomptes)) {
+        setDecomptes(projectData.decomptes);
+      } else {
+        setDecomptes([]);
       }
       
     } catch (err) {
@@ -152,11 +130,11 @@ const ProjectDetailsView = () => {
     const totalDecomptes = decomptes.length;
     const pendingDecomptes = decomptes.filter(d => d.status === 'PENDING').length;
     const paidDecomptes = decomptes.filter(d => d.status === 'PAID').length;
-    const totalDecomptesAmount = decomptes.reduce((sum, d) => sum + (d.amount || 0), 0);
-    const paidAmount = project.totalPaidAmount || 0; // Use from ProjectDetailsResponse
+    const totalDecomptesAmount = decomptes.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+    const paidAmount = parseFloat(project.totalPaidAmount) || 0; // From ProjectDetailsResponse
     const progressPercent = project.physicalProgress || 0;
-    const marketAmount = project.market?.amount || 0; // Use from market nested object
-    const financialProgress = marketAmount > 0 ? (paidAmount / marketAmount) * 100 : 0;
+    const contractAmount = parseFloat(project.contractTotalAmount) || 0; // From ProjectDetailsResponse
+    const financialProgress = contractAmount > 0 ? (paidAmount / contractAmount) * 100 : 0;
 
     return {
       totalDecomptes,
@@ -166,7 +144,7 @@ const ProjectDetailsView = () => {
       paidAmount,
       progressPercent,
       financialProgress,
-      marketAmount
+      contractAmount
     };
   };
 
@@ -241,7 +219,7 @@ const ProjectDetailsView = () => {
           {/* Header */}
           <PageHeader
             title={project.name}
-            subtitle={project.market?.title || 'Marché associé'}
+            subtitle={project.marketTitle || 'Marché associé'}
             icon={Building}
             breadcrumb={[
               { label: 'Construction', href: '/construction' },
@@ -311,42 +289,31 @@ const ProjectDetailsView = () => {
                     
                     <div>
                       <label className="text-sm font-medium text-gray-600">Marché Associé</label>
-                      <p className="text-gray-900 mt-1">{project.market?.title || 'N/A'}</p>
+                      <p className="text-gray-900 mt-1">{project.marketTitle || 'N/A'}</p>
                     </div>
                     
                     <div>
                       <label className="text-sm font-medium text-gray-600">Fournisseur</label>
                       <div className="flex items-center space-x-2 mt-1">
                         <User className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-900">{project.market?.supplier?.name || 'N/A'}</span>
+                        <span className="text-gray-900">{project.marketSupplier || 'N/A'}</span>
                       </div>
                     </div>
                     
-                    {project.createdDate && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Date de Création</label>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-900">
-                            {new Date(project.createdDate).toLocaleDateString('fr-FR', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Code Ligne Budgétaire</label>
+                      <p className="text-gray-900 mt-1">{project.budgetLineCode || 'N/A'}</p>
+                    </div>
                   </div>
 
                   {/* Financial Info */}
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-600">Valeur du Marché</label>
+                      <label className="text-sm font-medium text-gray-600">Valeur du Contrat</label>
                       <div className="flex items-center space-x-2 mt-1">
                         <DollarSign className="h-4 w-4 text-gray-400" />
                         <span className="text-xl font-bold text-gray-900">
-                          {formatCurrency(stats.marketAmount)}
+                          {formatCurrency(stats.contractAmount)}
                         </span>
                       </div>
                     </div>
@@ -366,7 +333,7 @@ const ProjectDetailsView = () => {
                       <div className="flex items-center space-x-2 mt-1">
                         <DollarSign className="h-4 w-4 text-gray-400" />
                         <span className="text-xl font-bold text-gray-600">
-                          {formatCurrency(stats.marketAmount - stats.paidAmount)}
+                          {formatCurrency(stats.contractAmount - stats.paidAmount)}
                         </span>
                       </div>
                     </div>
@@ -565,7 +532,7 @@ const ProjectDetailsView = () => {
             isOpen={showCreateDecompte}
             onClose={() => setShowCreateDecompte(false)}
             onSubmit={handleCreateDecompte}
-            projects={[project]}
+            projects={project ? [project] : []}
             selectedProject={project}
             submitting={submitting}
           />

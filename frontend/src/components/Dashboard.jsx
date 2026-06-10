@@ -613,13 +613,12 @@ const Dashboard = () => {
                             <p className="text-sm font-bold text-gray-900">
                               {formatCurrency(decompte.amount)}
                             </p>
-                            <p className={`text-xs px-2 py-1 rounded-full ${
-                              decompte.status === 'PAID' ? 'bg-green-100 text-green-800' :
+                            <p className={`text-xs px-2 py-1 rounded-full ${decompte.status === 'PAID' ? 'bg-green-100 text-green-800' :
                               decompte.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {decompte.status === 'PAID' ? 'Payé' : 
-                               decompte.status === 'PENDING' ? 'En Attente' : 'Rejeté'}
+                                'bg-red-100 text-red-800'
+                              }`}>
+                              {decompte.status === 'PAID' ? 'Payé' :
+                                decompte.status === 'PENDING' ? 'En Attente' : 'Rejeté'}
                             </p>
                           </div>
                         </div>

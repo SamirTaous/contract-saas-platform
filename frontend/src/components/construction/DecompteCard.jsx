@@ -82,7 +82,7 @@ const DecompteCard = ({ decompte, onPay, showProject = true }) => {
             <span className="text-gray-600">Montant</span>
           </div>
           <span className="font-bold text-green-600 text-lg">
-            {formatCurrency(decompte.amount)}
+            {formatCurrency(parseFloat(decompte.amount) || 0)}
           </span>
         </div>
 
