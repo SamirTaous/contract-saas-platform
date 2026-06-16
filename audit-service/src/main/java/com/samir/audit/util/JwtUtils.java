@@ -1,6 +1,6 @@
-package com.samir.ops.util;
+package com.samir.audit.util;
 
-import com.samir.ops.dto.UserContext; // Ensure this DTO exists in your ops service
+import com.samir.audit.dto.UserContext;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -14,14 +14,9 @@ import java.util.function.Function;
 @Component
 public class JwtUtils {
 
-    // MUST be identical to Auth Service
     private final String SECRET_STRING = "your-very-long-and-very-secret-key-for-this-pfe-project-2024";
     private final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes(StandardCharsets.UTF_8));
 
-    /**
-     * The main entry point for your controllers.
-     * Converts the raw "Bearer ..." header into a structured UserContext object.
-     */
     public UserContext getUserContext(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new RuntimeException("Invalid or missing Authorization header");
@@ -69,7 +64,7 @@ public class JwtUtils {
 
     public boolean isTokenValid(String token) {
         try {
-            return !extractAllClaims(token).getExpiration().before(new Date());
+            return !extractClaim(token, Claims::getExpiration).before(new Date());
         } catch (Exception e) {
             return false;
         }

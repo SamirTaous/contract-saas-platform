@@ -16,7 +16,8 @@ import {
   FileText,
   BarChart3,
   ChevronLeft,
-  Hammer
+  Hammer,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSidebar } from '../contexts/SidebarContext';
@@ -130,6 +131,13 @@ const Layout = ({ children }) => {
       icon: Hammer, 
       adminOnly: true,
       description: 'Projets et Décomptes'
+    },
+    { 
+      name: 'Journal d\'Activité', 
+      href: '/activity-logs', 
+      icon: Activity, 
+      adminOnly: true,
+      description: 'Audit & conformité'
     },
     { 
       name: 'Paramètres', 

@@ -1,4 +1,4 @@
-package com.samir.ops.dto;
+package com.samir.audit.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +9,7 @@ public class UserContext {
     private String username;
     private String role;
     private Long orgId;
-    private String orgName;
     private String orgUuid;
+    private String orgName;
     private String userUuid;
 }

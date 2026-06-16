@@ -1,6 +1,5 @@
-package com.samir.ops.config;
+package com.samir.audit.config;
 
-import com.samir.ops.activity.ActivityLoggingFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,40 +17,24 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor // Automatically injects the jwtAuthFilter bean
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
-    private final ActivityLoggingFilter activityLoggingFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // 1. Set session management to STATELESS (required for JWT)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // 2. Define authorization rules
                 .authorizeHttpRequests(auth -> auth
-
-
-                        // Only ADMINS can import budget files
-                        .requestMatchers("/api/budget/import").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/api/budget/all").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/api/projects/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/api/decomptes/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-
-                        // All other API endpoints require a valid login
+                        .requestMatchers("/api/activities/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .anyRequest().authenticated()
                 )
-
-                // 3. Add your custom JWT filter before the standard login filter
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(activityLoggingFilter, JwtAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -59,21 +42,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // 1. Allow your React development server (Vite default is 5173)
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-
-        // 2. Allow all the standard HTTP methods you are using
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-
-        // 3. Allow headers like "Authorization" (for JWT) and "Content-Type" (for JSON)
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-
-        // 4. Allow the browser to send credentials (like cookies or auth headers)
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Apply to all URLs
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }

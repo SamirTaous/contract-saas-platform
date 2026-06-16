@@ -1,5 +1,6 @@
 package com.samir.auth.config;
 
+import com.samir.auth.activity.ActivityLoggingFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final ActivityLoggingFilter activityLoggingFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -58,6 +60,7 @@ public class SecurityConfig {
 
                 // 3. Add our Custom JWT Filter BEFORE the standard Spring Login filter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(activityLoggingFilter, JwtAuthenticationFilter.class)
 
                 // 4. Disable the default Login Form
                 .formLogin(AbstractHttpConfigurer::disable)

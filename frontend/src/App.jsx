@@ -12,6 +12,7 @@ import ConstructionProjects from './components/construction/ConstructionProjects
 import ConstructionDecomptes from './components/construction/ConstructionDecomptes';
 import ProjectDetailsView from './components/construction/ProjectDetailsView';
 import DecompteDetailsView from './components/construction/DecompteDetailsView';
+import ActivityLogs from './components/ActivityLogs';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -35,6 +36,7 @@ function App() {
             <Route path="construction/projects/:id" element={<ProjectDetailsView />} />
             <Route path="construction/decomptes" element={<ConstructionDecomptes />} />
             <Route path="construction/decomptes/:id" element={<DecompteDetailsView />} />
+            <Route path="activity-logs" element={<ActivityLogs />} />
           </Route>
         </Routes>
       </AuthProvider>
