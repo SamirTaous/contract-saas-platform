@@ -1,24 +1,10 @@
-import { useEffect } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { SidebarProvider } from '../contexts/SidebarContext';
 import Layout from './Layout';
 
 const ProtectedRoute = () => {
-  const { isAuthenticated, loading, handleTokenExpiration } = useAuth();
-
-  // Listen for auth logout events from API interceptors
-  useEffect(() => {
-    const handleAuthLogout = () => {
-      handleTokenExpiration();
-    };
-
-    window.addEventListener('auth:logout', handleAuthLogout);
-    
-    return () => {
-      window.removeEventListener('auth:logout', handleAuthLogout);
-    };
-  }, [handleTokenExpiration]);
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (

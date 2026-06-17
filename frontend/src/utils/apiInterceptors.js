@@ -11,28 +11,23 @@ export const setupApiInterceptors = (apiInstance) => {
 
   // Response interceptor to handle token expiration
   apiInstance.interceptors.response.use(
-    (response) => {
-      return response;
-    },
+    (response) => response,
     (error) => {
-      // Check if error is due to token expiration
-      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-        // Token is expired or invalid
-        console.log('Authentication error detected, clearing session...');
-        
-        // Clear local storage
+      const status = error.response?.status;
+      const requestUrl = error.config?.url || '';
+      const isAuthEndpoint =
+        requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+
+      // 401 = invalid or expired session. 403 = authenticated but not allowed — keep the session.
+      if (status === 401 && !isAuthEndpoint) {
+        console.log('Session expired or invalid, clearing session...');
+
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        
-        // Dispatch custom event to notify auth context
+
         window.dispatchEvent(new CustomEvent('auth:logout'));
-        
-        // Redirect to login page
-        if (window.location.pathname !== '/auth') {
-          window.location.href = '/auth';
-        }
       }
-      
+
       return Promise.reject(error);
     }
   );

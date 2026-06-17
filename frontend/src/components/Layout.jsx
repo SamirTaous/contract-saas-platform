@@ -62,17 +62,28 @@ const Layout = ({ children }) => {
   }, [user]);
 
   const fetchOrganizationInfo = async (userData) => {
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(userData.role);
+
+    if (!isAdmin) {
+      setOrganization({
+        name: userData.orgName || 'Your Organization',
+        type: 'Enterprise',
+        description: 'Contract management organization',
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await orgApi.get('/organizations/me');
       setOrganization(response.data);
     } catch (err) {
       console.error('Failed to fetch organization info:', err);
-      // Fallback organization info
       if (userData) {
         setOrganization({
           name: userData.orgName || 'Your Organization',
           type: 'Enterprise',
-          description: 'Contract management organization'
+          description: 'Contract management organization',
         });
       }
     } finally {

@@ -44,8 +44,9 @@ public class SecurityConfig {
 
                 // 2. Define the "Lock" rules
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints (No token needed)
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // Public auth endpoints (No token needed)
+                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/me").authenticated()
 
                         // List all users / specific user
                         .requestMatchers("/api/users/all").authenticated()

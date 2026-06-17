@@ -71,6 +71,22 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // Sync React state when the API interceptor clears an expired session
+  useEffect(() => {
+    const onSessionExpired = () => {
+      setUser(null);
+      if (location.pathname !== '/auth') {
+        navigate('/auth', {
+          replace: true,
+          state: { from: location.pathname },
+        });
+      }
+    };
+
+    window.addEventListener('auth:logout', onSessionExpired);
+    return () => window.removeEventListener('auth:logout', onSessionExpired);
+  }, [location.pathname, navigate]);
+
   // Redirect to auth if not authenticated (except when already on auth page)
   useEffect(() => {
     if (!loading && !isAuthenticated() && location.pathname !== '/auth') {
