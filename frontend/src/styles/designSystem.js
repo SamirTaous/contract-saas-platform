@@ -31,7 +31,7 @@ export const designSystem = {
     container: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8',
     containerExpanded: 'max-w-none mx-auto px-4 sm:px-6 lg:px-8',
     section: 'py-8',
-    card: 'bg-white rounded-lg shadow-sm border border-gray-200',
+    card: 'bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden',
     cardPadding: 'p-6',
     grid: {
       cols1: 'grid grid-cols-1',
@@ -45,14 +45,14 @@ export const designSystem = {
   // Components
   components: {
     button: {
-      primary: 'inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200',
-      secondary: 'inline-flex items-center px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200',
-      success: 'inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200',
-      danger: 'inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200',
+      primary: 'inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:shadow-lg',
+      secondary: 'inline-flex items-center px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:shadow-md',
+      success: 'inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 hover:shadow-lg',
+      danger: 'inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 hover:shadow-lg',
     },
     input: {
-      base: 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200',
-      error: 'w-full px-3 py-2 border border-red-300 rounded-lg text-sm bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200',
+      base: 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200',
+      error: 'w-full px-3 py-2 border border-red-300 rounded-lg text-sm bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200',
     },
     badge: {
       success: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800',
@@ -62,10 +62,10 @@ export const designSystem = {
       neutral: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800',
     },
     stat: {
-      container: 'bg-white rounded-lg p-6 shadow-sm border border-gray-200',
+      container: 'bg-white rounded-xl p-6 shadow-sm border border-gray-200',
       value: 'text-2xl font-bold mt-1',
       label: 'text-sm font-medium text-gray-600',
-      icon: 'w-12 h-12 rounded-lg flex items-center justify-center',
+      icon: 'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm',
     },
   },
 

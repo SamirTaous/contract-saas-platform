@@ -15,7 +15,8 @@ import {
   Eye,
   PieChart,
   Hammer,
-  Building
+  Building,
+  ChevronRight
 } from 'lucide-react';
 import { designSystem } from '../styles/designSystem';
 import StatCard from './ui/StatCard';
@@ -264,16 +265,16 @@ const Dashboard = () => {
   ].slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className={designSystem.layout.container}>
         <div className={designSystem.layout.section}>
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
-                <p className="text-gray-600 mt-2">
-                  Bienvenue, {user.username}!{' '}
+              <div className="space-y-1">
+                <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Tableau de Bord</h1>
+                <p className="text-gray-600 text-base">
+                  Bienvenue, <span className="font-semibold text-gray-900">{user.username}</span>!{' '}
                   {editable
                     ? 'Vue d\'ensemble de votre système de gestion budgétaire'
                     : 'Consultez l\'état de votre organisation en lecture seule'}
@@ -283,10 +284,10 @@ const Dashboard = () => {
               <div className="flex items-center space-x-3">
                 <button
                   onClick={fetchDashboardData}
-                  className="flex items-center space-x-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center space-x-2 bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 group"
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  <span>Actualiser</span>
+                  <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
+                  <span className="font-medium">Actualiser</span>
                 </button>
               </div>
             </div>
@@ -312,127 +313,140 @@ const Dashboard = () => {
             {/* Quick Actions */}
             <Card
               title={editable ? 'Actions Rapides' : 'Accès Rapide'}
-              className="lg:col-span-1"
+              className="lg:col-span-1 hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {editable && (
-                  <Button
-                    variant="secondary"
-                    icon={Upload}
-                    className="w-full justify-start"
+                  <button
                     onClick={() => navigate('/budget')}
+                    className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-200 group"
                   >
-                    Importer Budget Excel
-                  </Button>
+                    <div className="w-10 h-10 bg-blue-100 group-hover:bg-blue-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                      <Upload className="h-5 w-5 text-blue-600 group-hover:text-white transition-colors duration-200" />
+                    </div>
+                    <span className="font-medium">Importer Budget Excel</span>
+                  </button>
                 )}
 
-                <Button
-                  variant="secondary"
-                  icon={Users}
-                  className="w-full justify-start"
+                <button
                   onClick={() => navigate('/users')}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all duration-200 group"
                 >
-                  {editable ? 'Gérer les Utilisateurs' : 'Voir l\'Équipe'}
-                </Button>
+                  <div className="w-10 h-10 bg-green-100 group-hover:bg-green-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                    <Users className="h-5 w-5 text-green-600 group-hover:text-white transition-colors duration-200" />
+                  </div>
+                  <span className="font-medium">{editable ? 'Gérer les Utilisateurs' : 'Voir l\'Équipe'}</span>
+                </button>
 
-                <Button
-                  variant="secondary"
-                  icon={FileText}
-                  className="w-full justify-start"
+                <button
                   onClick={() => navigate('/budget')}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-purple-50 hover:text-purple-700 rounded-xl transition-all duration-200 group"
                 >
-                  Lignes Budgétaires
-                </Button>
+                  <div className="w-10 h-10 bg-purple-100 group-hover:bg-purple-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                    <FileText className="h-5 w-5 text-purple-600 group-hover:text-white transition-colors duration-200" />
+                  </div>
+                  <span className="font-medium">Lignes Budgétaires</span>
+                </button>
 
-                <Button
-                  variant="secondary"
-                  icon={Hammer}
-                  className="w-full justify-start"
+                <button
                   onClick={() => navigate('/construction')}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-700 rounded-xl transition-all duration-200 group"
                 >
-                  Tableau de Bord Construction
-                </Button>
+                  <div className="w-10 h-10 bg-orange-100 group-hover:bg-orange-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                    <Hammer className="h-5 w-5 text-orange-600 group-hover:text-white transition-colors duration-200" />
+                  </div>
+                  <span className="font-medium">Tableau de Bord Construction</span>
+                </button>
 
-                <Button
-                  variant="secondary"
-                  icon={Building}
-                  className="w-full justify-start"
+                <button
                   onClick={() => navigate('/construction/projects')}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-all duration-200 group"
                 >
-                  {editable ? 'Gérer les Projets' : 'Voir les Projets'}
-                </Button>
+                  <div className="w-10 h-10 bg-indigo-100 group-hover:bg-indigo-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                    <Building className="h-5 w-5 text-indigo-600 group-hover:text-white transition-colors duration-200" />
+                  </div>
+                  <span className="font-medium">{editable ? 'Gérer les Projets' : 'Voir les Projets'}</span>
+                </button>
 
-                <Button
-                  variant="secondary"
-                  icon={FileText}
-                  className="w-full justify-start"
+                <button
                   onClick={() => navigate('/construction/decomptes')}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-pink-50 hover:text-pink-700 rounded-xl transition-all duration-200 group"
                 >
-                  {editable ? 'Gérer les Décomptes' : 'Voir les Décomptes'}
-                </Button>
+                  <div className="w-10 h-10 bg-pink-100 group-hover:bg-pink-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                    <FileText className="h-5 w-5 text-pink-600 group-hover:text-white transition-colors duration-200" />
+                  </div>
+                  <span className="font-medium">{editable ? 'Gérer les Décomptes' : 'Voir les Décomptes'}</span>
+                </button>
 
-                <Button
-                  variant="secondary"
-                  icon={BarChart3}
-                  className="w-full justify-start"
+                <button
                   onClick={() => navigate('/budget/analytics')}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-teal-50 hover:text-teal-700 rounded-xl transition-all duration-200 group"
                 >
-                  Analyses Budgétaires
-                </Button>
+                  <div className="w-10 h-10 bg-teal-100 group-hover:bg-teal-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                    <BarChart3 className="h-5 w-5 text-teal-600 group-hover:text-white transition-colors duration-200" />
+                  </div>
+                  <span className="font-medium">Analyses Budgétaires</span>
+                </button>
 
-                <Button
-                  variant="secondary"
-                  icon={Settings}
-                  className="w-full justify-start"
+                <button
                   onClick={() => navigate('/settings')}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-all duration-200 group"
                 >
-                  Paramètres
-                </Button>
+                  <div className="w-10 h-10 bg-gray-100 group-hover:bg-gray-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                    <Settings className="h-5 w-5 text-gray-600 group-hover:text-white transition-colors duration-200" />
+                  </div>
+                  <span className="font-medium">Paramètres</span>
+                </button>
               </div>
             </Card>
 
             {/* Recent Activity */}
             <Card
               title="Aperçu du Système"
-              className="lg:col-span-2"
+              className="lg:col-span-2 hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">
-                        <span className="font-medium">{activity.action}</span> - {activity.contract}
+                  <div key={index} className="flex items-start space-x-4 p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:to-transparent rounded-xl transition-all duration-200 border border-transparent hover:border-blue-100 group cursor-pointer">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full mt-1.5 flex-shrink-0 group-hover:scale-125 transition-transform duration-200"></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900 font-medium group-hover:text-blue-700 transition-colors">
+                        {activity.action}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                      <p className="text-sm text-gray-600 mt-0.5 truncate">{activity.contract}</p>
+                      <p className="text-xs text-gray-500 mt-1.5 flex items-center">
+                        <Activity className="h-3 w-3 mr-1" />
+                        {activity.time}
+                      </p>
                     </div>
                   </div>
                 )) : (
-                  <div className="text-center py-8">
-                    <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Aucune activité récente</p>
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Activity className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 font-medium">Aucune activité récente</p>
+                    <p className="text-xs text-gray-400 mt-1">Les activités apparaîtront ici</p>
                   </div>
                 )}
               </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant="secondary"
-                    className="w-full"
+                  <button
                     onClick={() => navigate('/budget')}
+                    className="flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 hover:shadow-lg transition-all duration-200 group"
                   >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Voir Budget
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="w-full"
+                    <Eye className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="font-medium">Voir Budget</span>
+                  </button>
+                  <button
                     onClick={() => navigate('/budget/analytics')}
+                    className="flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 hover:shadow-lg transition-all duration-200 group"
                   >
-                    <PieChart className="h-4 w-4 mr-2" />
-                    Analyses
-                  </Button>
+                    <PieChart className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="font-medium">Analyses</span>
+                  </button>
                 </div>
               </div>
             </Card>
@@ -441,96 +455,117 @@ const Dashboard = () => {
           {/* Budget Overview Section */}
           {budgetData && (
             <div className="mt-8">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-blue-600" />
-                    <span>Résumé Budgétaire</span>
-                  </h3>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 hover:shadow-xl transition-shadow duration-300">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <DollarSign className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Résumé Budgétaire</h3>
+                      <p className="text-sm text-gray-500">Vue d'ensemble financière</p>
+                    </div>
+                  </div>
                   <button
                     onClick={() => navigate('/budget/analytics')}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-all duration-200 font-medium group"
                   >
-                    Voir détails →
+                    <span>Voir détails</span>
+                    <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-blue-700">Budget Total</p>
-                        <p className="text-xl font-bold text-blue-900 mt-1">
-                          {formatCurrency(budgetData.totalBudget)}
-                        </p>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                  <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200 hover:shadow-lg hover:scale-105 transition-all duration-200 group cursor-pointer">
+                    <div className="absolute top-3 right-3 w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div className="relative">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <DollarSign className="h-5 w-5 text-blue-600" />
+                        <p className="text-sm font-semibold text-blue-700">Budget Total</p>
                       </div>
-                      <DollarSign className="h-8 w-8 text-blue-600" />
+                      <p className="text-2xl font-bold text-blue-900">
+                        {formatCurrency(budgetData.totalBudget)}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-orange-700">Engagé</p>
-                        <p className="text-xl font-bold text-orange-900 mt-1">
-                          {formatCurrency(budgetData.totalCommitted)}
-                        </p>
+                  <div className="relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-5 border border-orange-200 hover:shadow-lg hover:scale-105 transition-all duration-200 group cursor-pointer">
+                    <div className="absolute top-3 right-3 w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div className="relative">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <TrendingUp className="h-5 w-5 text-orange-600" />
+                        <p className="text-sm font-semibold text-orange-700">Engagé</p>
                       </div>
-                      <TrendingUp className="h-8 w-8 text-orange-600" />
+                      <p className="text-2xl font-bold text-orange-900">
+                        {formatCurrency(budgetData.totalCommitted)}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-green-700">Disponible</p>
-                        <p className="text-xl font-bold text-green-900 mt-1">
-                          {formatCurrency(budgetData.totalRemaining)}
-                        </p>
+                  <div className="relative bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200 hover:shadow-lg hover:scale-105 transition-all duration-200 group cursor-pointer">
+                    <div className="absolute top-3 right-3 w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div className="relative">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <p className="text-sm font-semibold text-green-700">Disponible</p>
                       </div>
-                      <CheckCircle className="h-8 w-8 text-green-600" />
+                      <p className="text-2xl font-bold text-green-900">
+                        {formatCurrency(budgetData.totalRemaining)}
+                      </p>
                     </div>
                   </div>
 
-                  <div className={`rounded-lg p-4 border ${budgetData.utilizationRate > 90 ? 'bg-red-50 border-red-200' :
-                    budgetData.utilizationRate > 75 ? 'bg-yellow-50 border-yellow-200' :
-                      'bg-emerald-50 border-emerald-200'
-                    }`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className={`text-sm font-medium ${budgetData.utilizationRate > 90 ? 'text-red-700' :
-                          budgetData.utilizationRate > 75 ? 'text-yellow-700' : 'text-emerald-700'
-                          }`}>Utilisation</p>
-                        <p className={`text-xl font-bold mt-1 ${budgetData.utilizationRate > 90 ? 'text-red-900' :
-                          budgetData.utilizationRate > 75 ? 'text-yellow-900' : 'text-emerald-900'
-                          }`}>
-                          {budgetData.utilizationRate.toFixed(1)}%
-                        </p>
-                      </div>
-                      <Activity className={`h-8 w-8 ${budgetData.utilizationRate > 90 ? 'text-red-600' :
-                        budgetData.utilizationRate > 75 ? 'text-yellow-600' : 'text-emerald-600'
+                  <div className={`relative rounded-xl p-5 border hover:shadow-lg hover:scale-105 transition-all duration-200 group cursor-pointer ${
+                    budgetData.utilizationRate > 90 ? 'bg-gradient-to-br from-red-50 to-red-100 border-red-200' :
+                    budgetData.utilizationRate > 75 ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200' :
+                    'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200'
+                  }`}>
+                    <div className={`absolute top-3 right-3 w-12 h-12 rounded-lg flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity ${
+                      budgetData.utilizationRate > 90 ? 'bg-red-600' :
+                      budgetData.utilizationRate > 75 ? 'bg-yellow-600' : 'bg-emerald-600'
+                    }`}></div>
+                    <div className="relative">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Activity className={`h-5 w-5 ${
+                          budgetData.utilizationRate > 90 ? 'text-red-600' :
+                          budgetData.utilizationRate > 75 ? 'text-yellow-600' : 'text-emerald-600'
                         }`} />
+                        <p className={`text-sm font-semibold ${
+                          budgetData.utilizationRate > 90 ? 'text-red-700' :
+                          budgetData.utilizationRate > 75 ? 'text-yellow-700' : 'text-emerald-700'
+                        }`}>Utilisation</p>
+                      </div>
+                      <p className={`text-2xl font-bold ${
+                        budgetData.utilizationRate > 90 ? 'text-red-900' :
+                        budgetData.utilizationRate > 75 ? 'text-yellow-900' : 'text-emerald-900'
+                      }`}>
+                        {budgetData.utilizationRate.toFixed(1)}%
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="mt-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Progression Budgétaire</span>
-                    <span className="text-sm text-gray-500">
+                <div className="mt-8 p-5 bg-gray-50 rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-gray-700">Progression Budgétaire</span>
+                    <span className="text-sm text-gray-600 px-3 py-1 bg-white rounded-full border border-gray-200">
                       {budgetData.totalLines} ligne{budgetData.totalLines > 1 ? 's' : ''} budgétaire{budgetData.totalLines > 1 ? 's' : ''}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="relative w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
                     <div
-                      className={`h-3 rounded-full transition-all duration-300 ${budgetData.utilizationRate > 90 ? 'bg-red-500' :
-                        budgetData.utilizationRate > 75 ? 'bg-yellow-500' : 'bg-green-500'
-                        }`}
+                      className={`h-4 rounded-full transition-all duration-500 shadow-md ${
+                        budgetData.utilizationRate > 90 ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                        budgetData.utilizationRate > 75 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 
+                        'bg-gradient-to-r from-green-500 to-green-600'
+                      }`}
                       style={{ width: `${Math.min(budgetData.utilizationRate, 100)}%` }}
-                    ></div>
+                    >
+                      <div className="h-full w-full bg-white opacity-20 animate-pulse"></div>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex justify-between text-xs font-medium text-gray-500 mt-2">
                     <span>0%</span>
                     <span>50%</span>
                     <span>100%</span>
@@ -543,95 +578,111 @@ const Dashboard = () => {
           {/* Decomptes Overview Section */}
           {decomptesData && (
             <div className="mt-8">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                    <Building className="h-5 w-5 text-purple-600" />
-                    <span>Décomptes de Construction</span>
-                  </h3>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 hover:shadow-xl transition-shadow duration-300">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <Building className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Décomptes de Construction</h3>
+                      <p className="text-sm text-gray-500">État des paiements</p>
+                    </div>
+                  </div>
                   <button
                     onClick={() => navigate('/construction/decomptes')}
-                    className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                    className="flex items-center space-x-2 px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg transition-all duration-200 font-medium group"
                   >
-                    Voir tous les décomptes →
+                    <span>Voir tous les décomptes</span>
+                    <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-purple-700">Total Décomptes</p>
-                        <p className="text-xl font-bold text-purple-900 mt-1">
-                          {decomptesData.totalDecomptes}
-                        </p>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                  <div className="relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200 hover:shadow-lg hover:scale-105 transition-all duration-200 group cursor-pointer">
+                    <div className="absolute top-3 right-3 w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div className="relative">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <FileText className="h-5 w-5 text-purple-600" />
+                        <p className="text-sm font-semibold text-purple-700">Total Décomptes</p>
                       </div>
-                      <FileText className="h-8 w-8 text-purple-600" />
+                      <p className="text-2xl font-bold text-purple-900">
+                        {decomptesData.totalDecomptes}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-yellow-700">En Attente</p>
-                        <p className="text-xl font-bold text-yellow-900 mt-1">
-                          {decomptesData.pendingDecomptes}
-                        </p>
+                  <div className="relative bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-5 border border-yellow-200 hover:shadow-lg hover:scale-105 transition-all duration-200 group cursor-pointer">
+                    <div className="absolute top-3 right-3 w-12 h-12 bg-yellow-600 rounded-lg flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div className="relative">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                        <p className="text-sm font-semibold text-yellow-700">En Attente</p>
                       </div>
-                      <AlertTriangle className="h-8 w-8 text-yellow-600" />
+                      <p className="text-2xl font-bold text-yellow-900">
+                        {decomptesData.pendingDecomptes}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-green-700">Payés</p>
-                        <p className="text-xl font-bold text-green-900 mt-1">
-                          {decomptesData.paidDecomptes}
-                        </p>
+                  <div className="relative bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200 hover:shadow-lg hover:scale-105 transition-all duration-200 group cursor-pointer">
+                    <div className="absolute top-3 right-3 w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div className="relative">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <p className="text-sm font-semibold text-green-700">Payés</p>
                       </div>
-                      <CheckCircle className="h-8 w-8 text-green-600" />
+                      <p className="text-2xl font-bold text-green-900">
+                        {decomptesData.paidDecomptes}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-indigo-700">Montant Total</p>
-                        <p className="text-xl font-bold text-indigo-900 mt-1">
-                          {formatCurrency(decomptesData.totalDecomptesAmount)}
-                        </p>
+                  <div className="relative bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-5 border border-indigo-200 hover:shadow-lg hover:scale-105 transition-all duration-200 group cursor-pointer">
+                    <div className="absolute top-3 right-3 w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div className="relative">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <DollarSign className="h-5 w-5 text-indigo-600" />
+                        <p className="text-sm font-semibold text-indigo-700">Montant Total</p>
                       </div>
-                      <DollarSign className="h-8 w-8 text-indigo-600" />
+                      <p className="text-2xl font-bold text-indigo-900">
+                        {formatCurrency(decomptesData.totalDecomptesAmount)}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Recent Decomptes */}
                 {decomptesData.decomptes.length > 0 && (
-                  <div className="mt-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Décomptes Récents</h4>
-                    <div className="space-y-2">
+                  <div className="mt-8">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                      <span className="w-1 h-4 bg-purple-600 rounded-full mr-2"></span>
+                      Décomptes Récents
+                    </h4>
+                    <div className="space-y-3">
                       {decomptesData.decomptes.map((decompte) => (
-                        <div key={decompte.uuid} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <FileText className="h-4 w-4 text-purple-600" />
+                        <div key={decompte.uuid} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-transparent rounded-xl border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all duration-200 group">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-600 transition-colors duration-200">
+                              <FileText className="h-5 w-5 text-purple-600 group-hover:text-white transition-colors duration-200" />
+                            </div>
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{decompte.label}</p>
-                              <p className="text-xs text-gray-500">{decompte.projectName}</p>
+                              <p className="text-sm font-semibold text-gray-900 group-hover:text-purple-700 transition-colors">{decompte.label}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">{decompte.projectName}</p>
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-bold text-gray-900">
                               {formatCurrency(decompte.amount)}
                             </p>
-                            <p className={`text-xs px-2 py-1 rounded-full ${decompte.status === 'PAID' ? 'bg-green-100 text-green-800' :
+                            <span className={`inline-block text-xs px-3 py-1 rounded-full font-medium mt-1 ${
+                              decompte.status === 'PAID' ? 'bg-green-100 text-green-800' :
                               decompte.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
+                              'bg-red-100 text-red-800'
+                            }`}>
                               {decompte.status === 'PAID' ? 'Payé' :
                                 decompte.status === 'PENDING' ? 'En Attente' : 'Rejeté'}
-                            </p>
+                            </span>
                           </div>
                         </div>
                       ))}
