@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
 import { formatCurrency } from '../../utils/currency';
 
-const ProjectCard = ({ project, onCreateDecompte }) => {
+const ProjectCard = ({ project, onCreateDecompte, canEdit = true }) => {
   const navigate = useNavigate();
   const progressPercent = project.physicalProgress || 0;
   const totalPaid = project.totalPaidAmount || 0;
@@ -73,21 +73,23 @@ const ProjectCard = ({ project, onCreateDecompte }) => {
       {/* Action Buttons */}
       <div className="mt-4 pt-4 border-t border-gray-100">
         <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Plus}
-            onClick={() => onCreateDecompte(project)}
-            className="flex-1"
-          >
-            Nouveau Décompte
-          </Button>
+          {canEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Plus}
+              onClick={() => onCreateDecompte(project)}
+              className="flex-1"
+            >
+              Nouveau Décompte
+            </Button>
+          )}
           <Button
             variant="primary"
             size="sm"
             icon={Eye}
             onClick={() => navigate(`/construction/projects/${project.uuid}`)}
-            className="flex-1"
+            className={canEdit ? 'flex-1' : 'w-full'}
           >
             Voir Détails
           </Button>

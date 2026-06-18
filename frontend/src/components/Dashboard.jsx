@@ -23,6 +23,8 @@ import Button from './ui/Button';
 import Card from './ui/Card';
 import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
+import { useAuth } from '../contexts/AuthContext';
+import { canEdit } from '../utils/roles';
 import api from '../api';
 
 // API instances
@@ -35,6 +37,7 @@ const operationApi = setupApiInterceptors(axios.create({
 }));
 
 const Dashboard = () => {
+  const { user: authUser } = useAuth();
   const [user, setUser] = useState(null);
   const [budgetData, setBudgetData] = useState(null);
   const [userData, setUserData] = useState(null);
@@ -42,6 +45,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const editable = canEdit(user || authUser);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -268,7 +272,12 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
-                <p className="text-gray-600 mt-2">Bienvenue, {user.username}! Vue d'ensemble de votre système de gestion budgétaire</p>
+                <p className="text-gray-600 mt-2">
+                  Bienvenue, {user.username}!{' '}
+                  {editable
+                    ? 'Vue d\'ensemble de votre système de gestion budgétaire'
+                    : 'Consultez l\'état de votre organisation en lecture seule'}
+                </p>
               </div>
 
               <div className="flex items-center space-x-3">
@@ -302,18 +311,20 @@ const Dashboard = () => {
           <div className={`${designSystem.layout.grid.cols3} ${designSystem.layout.grid.gap}`}>
             {/* Quick Actions */}
             <Card
-              title="Actions Rapides"
+              title={editable ? 'Actions Rapides' : 'Accès Rapide'}
               className="lg:col-span-1"
             >
               <div className="space-y-3">
-                <Button
-                  variant="secondary"
-                  icon={Upload}
-                  className="w-full justify-start"
-                  onClick={() => navigate('/budget')}
-                >
-                  Importer Budget Excel
-                </Button>
+                {editable && (
+                  <Button
+                    variant="secondary"
+                    icon={Upload}
+                    className="w-full justify-start"
+                    onClick={() => navigate('/budget')}
+                  >
+                    Importer Budget Excel
+                  </Button>
+                )}
 
                 <Button
                   variant="secondary"
@@ -321,7 +332,7 @@ const Dashboard = () => {
                   className="w-full justify-start"
                   onClick={() => navigate('/users')}
                 >
-                  Gérer les Utilisateurs
+                  {editable ? 'Gérer les Utilisateurs' : 'Voir l\'Équipe'}
                 </Button>
 
                 <Button
@@ -348,7 +359,7 @@ const Dashboard = () => {
                   className="w-full justify-start"
                   onClick={() => navigate('/construction/projects')}
                 >
-                  Gérer les Projets
+                  {editable ? 'Gérer les Projets' : 'Voir les Projets'}
                 </Button>
 
                 <Button
@@ -357,7 +368,7 @@ const Dashboard = () => {
                   className="w-full justify-start"
                   onClick={() => navigate('/construction/decomptes')}
                 >
-                  Gérer les Décomptes
+                  {editable ? 'Gérer les Décomptes' : 'Voir les Décomptes'}
                 </Button>
 
                 <Button
@@ -373,6 +384,7 @@ const Dashboard = () => {
                   variant="secondary"
                   icon={Settings}
                   className="w-full justify-start"
+                  onClick={() => navigate('/settings')}
                 >
                   Paramètres
                 </Button>

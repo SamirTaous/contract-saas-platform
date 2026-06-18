@@ -20,6 +20,9 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
+import { useAuth } from '../contexts/AuthContext';
+import { canEdit } from '../utils/roles';
+import ReadOnlyBanner from './ui/ReadOnlyBanner';
 import { useSidebar } from '../contexts/SidebarContext';
 import BudgetCharts from './BudgetCharts';
 import BudgetAnalytics from './BudgetAnalytics';
@@ -31,6 +34,8 @@ const budgetApi = setupApiInterceptors(axios.create({
 
 const BudgetLineDetails = () => {
   const { sidebarCollapsed } = useSidebar();
+  const { user } = useAuth();
+  const editable = canEdit(user);
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -215,6 +220,8 @@ const BudgetLineDetails = () => {
       <div className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 ${
         sidebarCollapsed ? 'max-w-none' : 'max-w-7xl'
       }`}>
+        {!editable && <ReadOnlyBanner />}
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -234,31 +241,33 @@ const BudgetLineDetails = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              {isEditing ? (
-                <>
+              {editable && (
+                isEditing ? (
+                  <>
+                    <button
+                      onClick={handleSave}
+                      className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span>Enregistrer</span>
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                      <span>Annuler</span>
+                    </button>
+                  </>
+                ) : (
                   <button
-                    onClick={handleSave}
-                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    <Save className="h-4 w-4" />
-                    <span>Enregistrer</span>
+                    <Edit className="h-4 w-4" />
+                    <span>Modifier</span>
                   </button>
-                  <button
-                    onClick={handleCancel}
-                    className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                    <span>Annuler</span>
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Edit className="h-4 w-4" />
-                  <span>Modifier</span>
-                </button>
+                )
               )}
             </div>
           </div>

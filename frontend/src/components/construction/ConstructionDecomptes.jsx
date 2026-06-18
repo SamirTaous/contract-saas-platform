@@ -20,6 +20,9 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useSidebar } from '../../contexts/SidebarContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { canEdit } from '../../utils/roles';
+import ReadOnlyBanner from '../ui/ReadOnlyBanner';
 import { setupApiInterceptors } from '../../utils/apiInterceptors';
 import { formatCurrency } from '../../utils/currency';
 import { designSystem, getContainerClasses } from '../../styles/designSystem';
@@ -38,6 +41,8 @@ const operationApi = setupApiInterceptors(axios.create({
 
 const ConstructionDecomptes = () => {
   const { sidebarCollapsed } = useSidebar();
+  const { user } = useAuth();
+  const editable = canEdit(user);
   const navigate = useNavigate();
   const [decomptes, setDecomptes] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -273,15 +278,17 @@ const ConstructionDecomptes = () => {
           <div className="mt-6 pt-4 border-t border-gray-100">
             {decompte.status === 'PENDING' ? (
               <div className="flex space-x-2">
-                <Button
-                  variant="success"
-                  size="sm"
-                  icon={CheckCircle}
-                  className="flex-1"
-                  onClick={() => handlePayDecompte(decompte.uuid)}
-                >
-                  Valider et Payer
-                </Button>
+                {editable && (
+                  <Button
+                    variant="success"
+                    size="sm"
+                    icon={CheckCircle}
+                    className="flex-1"
+                    onClick={() => handlePayDecompte(decompte.uuid)}
+                  >
+                    Valider et Payer
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -352,7 +359,7 @@ const ConstructionDecomptes = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              {decompte.status === 'PENDING' && (
+              {editable && decompte.status === 'PENDING' && (
                 <Button
                   variant="success"
                   size="sm"
@@ -402,15 +409,19 @@ const ConstructionDecomptes = () => {
             subtitle={`${stats.totalDecomptes} décomptes • ${stats.pendingDecomptes} en attente • ${stats.paidDecomptes} payés`}
             icon={FileText}
             action={
-              <Button
-                variant="primary"
-                icon={Plus}
-                onClick={() => setShowCreateModal(true)}
-              >
-                Nouveau Décompte
-              </Button>
+              editable ? (
+                <Button
+                  variant="primary"
+                  icon={Plus}
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  Nouveau Décompte
+                </Button>
+              ) : null
             }
           />
+
+          {!editable && <ReadOnlyBanner />}
 
           {/* Statistics */}
           <div className={`${designSystem.layout.grid.cols4} ${designSystem.layout.grid.gap} mb-8`}>
@@ -524,13 +535,15 @@ const ConstructionDecomptes = () => {
                   : "Les décomptes de paiement apparaîtront ici une fois créés."
               }
               action={
-                <Button
-                  variant="primary"
-                  icon={Plus}
-                  onClick={() => setShowCreateModal(true)}
-                >
-                  Créer un Décompte
-                </Button>
+                editable && !searchTerm && filterStatus === 'all' ? (
+                  <Button
+                    variant="primary"
+                    icon={Plus}
+                    onClick={() => setShowCreateModal(true)}
+                  >
+                    Créer un Décompte
+                  </Button>
+                ) : null
               }
             />
           ) : (
@@ -552,13 +565,15 @@ const ConstructionDecomptes = () => {
           )}
 
           {/* Create Decompte Modal */}
-          <CreateDecompteModal
-            isOpen={showCreateModal}
-            onClose={() => setShowCreateModal(false)}
-            onSubmit={handleCreateDecompte}
-            projects={projects}
-            submitting={submitting}
-          />
+          {editable && (
+            <CreateDecompteModal
+              isOpen={showCreateModal}
+              onClose={() => setShowCreateModal(false)}
+              onSubmit={handleCreateDecompte}
+              projects={projects}
+              submitting={submitting}
+            />
+          )}
         </div>
       </div>
     </div>

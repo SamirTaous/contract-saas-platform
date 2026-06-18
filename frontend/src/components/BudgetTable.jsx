@@ -23,6 +23,9 @@ import {
 import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
 import { useSidebar } from '../contexts/SidebarContext';
+import { useAuth } from '../contexts/AuthContext';
+import { canEdit } from '../utils/roles';
+import ReadOnlyBanner from './ui/ReadOnlyBanner';
 import BudgetImport from './BudgetImport';
 
 const budgetApi = setupApiInterceptors(axios.create({
@@ -31,6 +34,8 @@ const budgetApi = setupApiInterceptors(axios.create({
 
 const BudgetTable = () => {
   const { sidebarCollapsed } = useSidebar();
+  const { user } = useAuth();
+  const editable = canEdit(user);
   const navigate = useNavigate();
   const [budgetLines, setBudgetLines] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -192,7 +197,9 @@ const BudgetTable = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Lignes Budgétaires</h1>
-              <p className="text-gray-600 mt-2">Gestion et suivi des lignes budgétaires</p>
+              <p className="text-gray-600 mt-2">
+                {editable ? 'Gestion et suivi des lignes budgétaires' : 'Consultation des lignes budgétaires'}
+              </p>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -204,14 +211,23 @@ const BudgetTable = () => {
                 <span>Actualiser</span>
               </button>
               
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <Upload className="h-4 w-4" />
-                <span>Importer Excel</span>
-              </button>
-              
+              {editable && (
+                <>
+                  <button
+                    onClick={() => setShowImportModal(true)}
+                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>Importer Excel</span>
+                  </button>
+                  
+                  <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <Plus className="h-4 w-4" />
+                    <span>Nouvelle Ligne</span>
+                  </button>
+                </>
+              )}
+
               <button
                 onClick={() => navigate('/budget/analytics')}
                 className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
@@ -219,14 +235,11 @@ const BudgetTable = () => {
                 <TrendingUp className="h-4 w-4" />
                 <span>Analyses</span>
               </button>
-              
-              <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                <Plus className="h-4 w-4" />
-                <span>Nouvelle Ligne</span>
-              </button>
             </div>
           </div>
         </div>
+
+        {!editable && <ReadOnlyBanner />}
 
         {/* Filters and Search */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -419,18 +432,22 @@ const BudgetTable = () => {
                           >
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button
-                            className="text-gray-600 hover:text-gray-900 p-1 rounded"
-                            title="Modifier"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-900 p-1 rounded"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          {editable && (
+                            <>
+                              <button
+                                className="text-gray-600 hover:text-gray-900 p-1 rounded"
+                                title="Modifier"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                className="text-red-600 hover:text-red-900 p-1 rounded"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -508,7 +525,7 @@ const BudgetTable = () => {
         </div>
 
         {/* Import Modal */}
-        {showImportModal && (
+        {editable && showImportModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">

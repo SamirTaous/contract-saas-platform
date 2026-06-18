@@ -1,7 +1,7 @@
 import { CheckCircle, FileText, User, Calendar, Eye, Shield } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
-const MarketCard = ({ market, linkedBudget, onSign }) => {
+const MarketCard = ({ market, linkedBudget, onSign, canEdit = true }) => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'DRAFT':
@@ -89,7 +89,7 @@ const MarketCard = ({ market, linkedBudget, onSign }) => {
           </div>
           
           <div className="flex items-center space-x-2">
-            {market.status === 'DRAFT' && (
+            {canEdit && market.status === 'DRAFT' && (
               <button
                 onClick={() => onSign(market.uuid)}
                 className="inline-flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"

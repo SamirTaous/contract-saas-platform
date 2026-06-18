@@ -22,6 +22,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useSidebar } from '../contexts/SidebarContext';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
+import { isAdmin } from '../utils/roles';
 import axios from 'axios';
 
 // Create API instance for organizations
@@ -62,9 +63,7 @@ const Layout = ({ children }) => {
   }, [user]);
 
   const fetchOrganizationInfo = async (userData) => {
-    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(userData.role);
-
-    if (!isAdmin) {
+    if (!isAdmin(userData)) {
       setOrganization({
         name: userData.orgName || 'Your Organization',
         type: 'Enterprise',
@@ -106,13 +105,12 @@ const Layout = ({ children }) => {
       name: 'Membres de l\'Équipe', 
       href: '/users', 
       icon: Users,
-      description: 'Gérer votre équipe'
+      description: 'Consulter votre équipe'
     },
     { 
       name: 'Gestion Budgétaire', 
       icon: DollarSign, 
-      adminOnly: true,
-      description: 'Service Comptabilité',
+      description: 'Lignes budgétaires & analyses',
       hasSubmenu: true,
       submenu: [
         {
@@ -133,15 +131,13 @@ const Layout = ({ children }) => {
       name: 'Marchés Publics', 
       href: '/markets', 
       icon: Building, 
-      adminOnly: true,
-      description: 'Service Marché'
+      description: 'Contrats et marchés'
     },
     { 
       name: 'Gestion de Construction', 
       href: '/construction', 
       icon: Hammer, 
-      adminOnly: true,
-      description: 'Projets et Décomptes'
+      description: 'Projets et décomptes'
     },
     { 
       name: 'Journal d\'Activité', 
@@ -159,7 +155,7 @@ const Layout = ({ children }) => {
   ];
 
   const filteredNavigation = navigation.filter(item => {
-    if (item.adminOnly && user && !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+    if (item.adminOnly && user && !isAdmin(user)) {
       return false;
     }
     return true;

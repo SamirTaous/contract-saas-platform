@@ -26,6 +26,9 @@ import CreateDecompteModal from './construction/CreateDecompteModal';
 import ProjectCard from './construction/ProjectCard';
 import DecompteCard from './construction/DecompteCard';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
+import { useAuth } from '../contexts/AuthContext';
+import { canEdit } from '../utils/roles';
+import ReadOnlyBanner from './ui/ReadOnlyBanner';
 import { formatCurrency } from '../utils/currency';
 import { designSystem, getContainerClasses } from '../styles/designSystem';
 import PageHeader from './ui/PageHeader';
@@ -41,6 +44,8 @@ const operationApi = setupApiInterceptors(axios.create({
 
 const ConstructionManagement = () => {
   const { sidebarCollapsed } = useSidebar();
+  const { user } = useAuth();
+  const editable = canEdit(user);
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [markets, setMarkets] = useState([]);
@@ -278,27 +283,31 @@ const ConstructionManagement = () => {
           {/* Header */}
           <PageHeader
             title="Gestion de Construction"
-            subtitle="Gérer les projets de construction et les décomptes"
+            subtitle={editable ? 'Gérer les projets de construction et les décomptes' : 'Consulter les projets de construction et les décomptes'}
             icon={Hammer}
             action={
-              <div className="flex items-center space-x-3">
-                <Button
-                  variant="secondary"
-                  icon={Plus}
-                  onClick={() => setShowCreateDecompteModal(true)}
-                >
-                  Créer Décompte
-                </Button>
-                <Button
-                  variant="primary"
-                  icon={Hammer}
-                  onClick={() => setShowCreateProjectWizard(true)}
-                >
-                  Nouveau Projet
-                </Button>
-              </div>
+              editable ? (
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="secondary"
+                    icon={Plus}
+                    onClick={() => setShowCreateDecompteModal(true)}
+                  >
+                    Créer Décompte
+                  </Button>
+                  <Button
+                    variant="primary"
+                    icon={Hammer}
+                    onClick={() => setShowCreateProjectWizard(true)}
+                  >
+                    Nouveau Projet
+                  </Button>
+                </div>
+              ) : null
             }
           />
+
+          {!editable && <ReadOnlyBanner />}
 
           {/* Statistics Dashboard */}
           <div className={`${designSystem.layout.grid.cols4} ${designSystem.layout.grid.gap} mb-8`}>
@@ -408,26 +417,30 @@ const ConstructionManagement = () => {
           )}
 
           {/* Create Project Wizard */}
-          <CreateProjectWizard
-            isOpen={showCreateProjectWizard}
-            onClose={() => setShowCreateProjectWizard(false)}
-            onSubmit={handleCreateProject}
-            markets={markets}
-            submitting={submitting}
-          />
+          {editable && (
+            <>
+              <CreateProjectWizard
+                isOpen={showCreateProjectWizard}
+                onClose={() => setShowCreateProjectWizard(false)}
+                onSubmit={handleCreateProject}
+                markets={markets}
+                submitting={submitting}
+              />
 
-          {/* Create Decompte Modal */}
-          <CreateDecompteModal
-            isOpen={showCreateDecompteModal}
-            onClose={() => {
-              setShowCreateDecompteModal(false);
-              setSelectedProject(null);
-            }}
-            onSubmit={handleCreateDecompte}
-            projects={projects}
-            selectedProject={selectedProject}
-            submitting={submitting}
-          />
+              {/* Create Decompte Modal */}
+              <CreateDecompteModal
+                isOpen={showCreateDecompteModal}
+                onClose={() => {
+                  setShowCreateDecompteModal(false);
+                  setSelectedProject(null);
+                }}
+                onSubmit={handleCreateDecompte}
+                projects={projects}
+                selectedProject={selectedProject}
+                submitting={submitting}
+              />
+            </>
+          )}
 
           {/* Main Content */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -450,15 +463,17 @@ const ConstructionManagement = () => {
                 <EmptyState
                   icon={Building}
                   title="Aucun Projet Trouvé"
-                  description="Créez votre premier projet de construction à partir d'un marché signé."
+                  description={editable ? 'Créez votre premier projet de construction à partir d\'un marché signé.' : 'Aucun projet de construction n\'a encore été enregistré.'}
                   action={
-                    <Button
-                      variant="primary"
-                      icon={Hammer}
-                      onClick={() => setShowCreateProjectWizard(true)}
-                    >
-                      Créer un Projet
-                    </Button>
+                    editable ? (
+                      <Button
+                        variant="primary"
+                        icon={Hammer}
+                        onClick={() => setShowCreateProjectWizard(true)}
+                      >
+                        Créer un Projet
+                      </Button>
+                    ) : null
                   }
                 />
               ) : (
@@ -468,6 +483,7 @@ const ConstructionManagement = () => {
                       key={project.uuid}
                       project={project}
                       onCreateDecompte={() => openCreateDecompteModal(project)}
+                      canEdit={editable}
                     />
                   ))}
                   {projects.length > 5 && (
@@ -506,13 +522,15 @@ const ConstructionManagement = () => {
                   title="Aucun Décompte"
                   description="Les décomptes de paiement apparaîtront ici une fois créés."
                   action={
-                    <Button
-                      variant="secondary"
-                      icon={Plus}
-                      onClick={() => setShowCreateDecompteModal(true)}
-                    >
-                      Créer Décompte
-                    </Button>
+                    editable ? (
+                      <Button
+                        variant="secondary"
+                        icon={Plus}
+                        onClick={() => setShowCreateDecompteModal(true)}
+                      >
+                        Créer Décompte
+                      </Button>
+                    ) : null
                   }
                 />
               ) : (
@@ -522,6 +540,7 @@ const ConstructionManagement = () => {
                       key={decompte.uuid}
                       decompte={decompte}
                       onPay={handlePayDecompte}
+                      canEdit={editable}
                     />
                   ))}
                   {decomptes.length > 5 && (
@@ -543,39 +562,42 @@ const ConstructionManagement = () => {
           {/* Quick Actions */}
           <div className="mt-8">
             <Card
-              title="Actions Rapides"
-              subtitle="Raccourcis pour les tâches fréquentes"
+              title={editable ? 'Actions Rapides' : 'Accès Rapide'}
+              subtitle={editable ? 'Raccourcis pour les tâches fréquentes' : 'Consulter les sections principales'}
               icon={TrendingUp}
             >
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Button
-                  variant="secondary"
-                  icon={Building}
-                  className="w-full justify-start h-auto py-4"
-                  onClick={() => setShowCreateProjectWizard(true)}
-                >
-                  <div className="text-left">
-                    <div className="font-medium">Nouveau Projet</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Créer à partir d'un marché signé
-                    </div>
-                  </div>
-                </Button>
-                
-                <Button
-                  variant="secondary"
-                  icon={FileText}
-                  className="w-full justify-start h-auto py-4"
-                  onClick={() => setShowCreateDecompteModal(true)}
-                >
-                  <div className="text-left">
-                    <div className="font-medium">Créer Décompte</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Demande de paiement
-                    </div>
-                  </div>
-                </Button>
-                
+                {editable && (
+                  <>
+                    <Button
+                      variant="secondary"
+                      icon={Building}
+                      className="w-full justify-start h-auto py-4"
+                      onClick={() => setShowCreateProjectWizard(true)}
+                    >
+                      <div className="text-left">
+                        <div className="font-medium">Nouveau Projet</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Créer à partir d'un marché signé
+                        </div>
+                      </div>
+                    </Button>
+                    
+                    <Button
+                      variant="secondary"
+                      icon={FileText}
+                      className="w-full justify-start h-auto py-4"
+                      onClick={() => setShowCreateDecompteModal(true)}
+                    >
+                      <div className="text-left">
+                        <div className="font-medium">Créer Décompte</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Demande de paiement
+                        </div>
+                      </div>
+                    </Button>
+                  </>
+                )}
                 <Button
                   variant="secondary"
                   icon={Eye}

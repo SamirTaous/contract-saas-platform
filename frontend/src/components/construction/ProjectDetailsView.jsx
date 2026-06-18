@@ -24,6 +24,9 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useSidebar } from '../../contexts/SidebarContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { canEdit } from '../../utils/roles';
+import ReadOnlyBanner from '../ui/ReadOnlyBanner';
 import { setupApiInterceptors } from '../../utils/apiInterceptors';
 import { formatCurrency } from '../../utils/currency';
 import { designSystem, getContainerClasses } from '../../styles/designSystem';
@@ -218,6 +221,8 @@ const ProjectDetailsView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { sidebarCollapsed } = useSidebar();
+  const { user } = useAuth();
+  const editable = canEdit(user);
   const [project, setProject] = useState(null);
   const [decomptes, setDecomptes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -390,6 +395,8 @@ const ProjectDetailsView = () => {
     <div className="min-h-screen bg-gray-50">
       <div className={getContainerClasses(sidebarCollapsed)}>
         <div className="py-4 space-y-4">
+          {!editable && <ReadOnlyBanner />}
+
           {/* Compact Header with Project Info */}
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center justify-between">
@@ -418,13 +425,15 @@ const ProjectDetailsView = () => {
                   </div>
                 </div>
               </div>
-              <Button
-                variant="primary"
-                icon={Plus}
-                onClick={() => setShowCreateDecompte(true)}
-              >
-                Nouveau Décompte
-              </Button>
+              {editable && (
+                <Button
+                  variant="primary"
+                  icon={Plus}
+                  onClick={() => setShowCreateDecompte(true)}
+                >
+                  Nouveau Décompte
+                </Button>
+              )}
             </div>
           </div>
 
@@ -679,14 +688,16 @@ const ProjectDetailsView = () => {
                 >
                   Voir Tout
                 </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  icon={Plus}
-                  onClick={() => setShowCreateDecompte(true)}
-                >
-                  Nouveau
-                </Button>
+                {editable && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={Plus}
+                    onClick={() => setShowCreateDecompte(true)}
+                  >
+                    Nouveau
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -697,13 +708,15 @@ const ProjectDetailsView = () => {
                   title="Aucun Décompte"
                   description="Ce projet n'a pas encore de décomptes de paiement."
                   action={
-                    <Button
-                      variant="primary"
-                      icon={Plus}
-                      onClick={() => setShowCreateDecompte(true)}
-                    >
-                      Créer le Premier Décompte
-                    </Button>
+                    editable ? (
+                      <Button
+                        variant="primary"
+                        icon={Plus}
+                        onClick={() => setShowCreateDecompte(true)}
+                      >
+                        Créer le Premier Décompte
+                      </Button>
+                    ) : null
                   }
                 />
               ) : (
@@ -714,6 +727,7 @@ const ProjectDetailsView = () => {
                       decompte={decompte}
                       onPay={handlePayDecompte}
                       showProject={false}
+                      canEdit={editable}
                     />
                   ))}
                   
@@ -734,14 +748,16 @@ const ProjectDetailsView = () => {
           </div>
 
           {/* Create Decompte Modal */}
-          <CreateDecompteModal
-            isOpen={showCreateDecompte}
-            onClose={() => setShowCreateDecompte(false)}
-            onSubmit={handleCreateDecompte}
-            projects={project ? [project] : []}
-            selectedProject={project}
-            submitting={submitting}
-          />
+          {editable && (
+            <CreateDecompteModal
+              isOpen={showCreateDecompte}
+              onClose={() => setShowCreateDecompte(false)}
+              onSubmit={handleCreateDecompte}
+              projects={project ? [project] : []}
+              selectedProject={project}
+              submitting={submitting}
+            />
+          )}
         </div>
       </div>
     </div>

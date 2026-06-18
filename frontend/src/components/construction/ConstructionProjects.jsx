@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useSidebar } from '../../contexts/SidebarContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { canEdit } from '../../utils/roles';
+import ReadOnlyBanner from '../ui/ReadOnlyBanner';
 import { setupApiInterceptors } from '../../utils/apiInterceptors';
 import { formatCurrency } from '../../utils/currency';
 import { designSystem, getContainerClasses } from '../../styles/designSystem';
@@ -36,6 +39,8 @@ const operationApi = setupApiInterceptors(axios.create({
 
 const ConstructionProjects = () => {
   const { sidebarCollapsed } = useSidebar();
+  const { user } = useAuth();
+  const editable = canEdit(user);
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [markets, setMarkets] = useState([]);
@@ -327,15 +332,19 @@ const ConstructionProjects = () => {
             subtitle={`${stats.totalProjects} projets • ${stats.activeProjects} actifs • ${stats.completedProjects} terminés`}
             icon={Building}
             action={
-              <Button
-                variant="primary"
-                icon={Plus}
-                onClick={() => setShowCreateWizard(true)}
-              >
-                Nouveau Projet
-              </Button>
+              editable ? (
+                <Button
+                  variant="primary"
+                  icon={Plus}
+                  onClick={() => setShowCreateWizard(true)}
+                >
+                  Nouveau Projet
+                </Button>
+              ) : null
             }
           />
+
+          {!editable && <ReadOnlyBanner />}
 
           {/* Statistics */}
           <div className={`${designSystem.layout.grid.cols4} ${designSystem.layout.grid.gap} mb-8`}>
@@ -448,13 +457,15 @@ const ConstructionProjects = () => {
                   : "Créez votre premier projet de construction à partir d'un marché signé."
               }
               action={
-                <Button
-                  variant="primary"
-                  icon={Plus}
-                  onClick={() => setShowCreateWizard(true)}
-                >
-                  Créer un Projet
-                </Button>
+                editable && !searchTerm && filterStatus === 'all' ? (
+                  <Button
+                    variant="primary"
+                    icon={Plus}
+                    onClick={() => setShowCreateWizard(true)}
+                  >
+                    Créer un Projet
+                  </Button>
+                ) : null
               }
             />
           ) : (
@@ -476,13 +487,15 @@ const ConstructionProjects = () => {
           )}
 
           {/* Create Project Wizard */}
-          <CreateProjectWizard
-            isOpen={showCreateWizard}
-            onClose={() => setShowCreateWizard(false)}
-            onSubmit={handleCreateProject}
-            markets={markets}
-            submitting={submitting}
-          />
+          {editable && (
+            <CreateProjectWizard
+              isOpen={showCreateWizard}
+              onClose={() => setShowCreateWizard(false)}
+              onSubmit={handleCreateProject}
+              markets={markets}
+              submitting={submitting}
+            />
+          )}
         </div>
       </div>
     </div>

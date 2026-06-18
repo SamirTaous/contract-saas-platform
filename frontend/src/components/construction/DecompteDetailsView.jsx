@@ -19,6 +19,9 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useSidebar } from '../../contexts/SidebarContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { canEdit } from '../../utils/roles';
+import ReadOnlyBanner from '../ui/ReadOnlyBanner';
 import { setupApiInterceptors } from '../../utils/apiInterceptors';
 import { formatCurrency } from '../../utils/currency';
 import { designSystem, getContainerClasses } from '../../styles/designSystem';
@@ -36,6 +39,8 @@ const DecompteDetailsView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { sidebarCollapsed } = useSidebar();
+  const { user } = useAuth();
+  const editable = canEdit(user);
   const [decompte, setDecompte] = useState(null);
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -215,6 +220,8 @@ const DecompteDetailsView = () => {
     <div className="min-h-screen bg-gray-50">
       <div className={getContainerClasses(sidebarCollapsed)}>
         <div className={designSystem.layout.section}>
+          {!editable && <ReadOnlyBanner />}
+
           {/* Header */}
           <PageHeader
             title={decompte.label}
@@ -234,7 +241,7 @@ const DecompteDetailsView = () => {
                 >
                   Retour
                 </Button>
-                {decompte.status === 'PENDING' && (
+                {editable && decompte.status === 'PENDING' && (
                   <div className="flex space-x-2">
                     <Button
                       variant="danger"
@@ -480,9 +487,9 @@ const DecompteDetailsView = () => {
             {/* Sidebar */}
             <div className="xl:col-span-1 space-y-6">
               {/* Quick Actions */}
-              <Card title="Actions" icon={Settings}>
+              <Card title={editable ? 'Actions' : 'Informations'} icon={Settings}>
                 <div className="space-y-3">
-                  {decompte.status === 'PENDING' && (
+                  {editable && decompte.status === 'PENDING' && (
                     <>
                       <Button
                         variant="success"
@@ -514,14 +521,16 @@ const DecompteDetailsView = () => {
                     Télécharger PDF
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    icon={Edit}
-                    className="w-full"
-                    disabled={decompte.status !== 'PENDING'}
-                  >
-                    Modifier
-                  </Button>
+                  {editable && (
+                    <Button
+                      variant="outline"
+                      icon={Edit}
+                      className="w-full"
+                      disabled={decompte.status !== 'PENDING'}
+                    >
+                      Modifier
+                    </Button>
+                  )}
 
                   {project && (
                     <Button

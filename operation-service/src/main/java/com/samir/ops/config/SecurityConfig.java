@@ -4,6 +4,7 @@ import com.samir.ops.activity.ActivityLoggingFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -37,15 +38,16 @@ public class SecurityConfig {
 
                 // 2. Define authorization rules
                 .authorizeHttpRequests(auth -> auth
+                        // Write operations — admins only
+                        .requestMatchers(HttpMethod.POST, "/api/budget/import").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/markets/create").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/markets/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/markets/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/projects/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/decomptes/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/decomptes/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
-
-                        // Only ADMINS can import budget files
-                        .requestMatchers("/api/budget/import").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/api/budget/all").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/api/projects/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/api/decomptes/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-
-                        // All other API endpoints require a valid login
+                        // Read operations — all authenticated roles (including USER)
                         .anyRequest().authenticated()
                 )
 

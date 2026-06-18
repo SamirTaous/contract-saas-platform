@@ -20,6 +20,9 @@ import LoadingSkeleton from './LoadingSkeleton';
 import CreateMarketWizard from './market/CreateMarketWizard';
 import MarketCard from './market/MarketCard';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
+import { useAuth } from '../contexts/AuthContext';
+import { canEdit } from '../utils/roles';
+import ReadOnlyBanner from './ui/ReadOnlyBanner';
 import { formatCurrency } from '../utils/currency';
 import { designSystem, getContainerClasses } from '../styles/designSystem';
 import PageHeader from './ui/PageHeader';
@@ -35,6 +38,8 @@ const operationApi = setupApiInterceptors(axios.create({
 
 const MarketManagement = () => {
   const { sidebarCollapsed } = useSidebar();
+  const { user } = useAuth();
+  const editable = canEdit(user);
   const [markets, setMarkets] = useState([]);
   const [budgetLines, setBudgetLines] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -169,18 +174,22 @@ const MarketManagement = () => {
           {/* Header */}
           <PageHeader
             title="Gestion des Marchés Publics"
-            subtitle="Gérer les contrats et les opérations de marché"
+            subtitle={editable ? 'Gérer les contrats et les opérations de marché' : 'Consulter les contrats et marchés publics'}
             icon={Building}
             action={
-              <Button
-                variant="primary"
-                icon={FilePlus}
-                onClick={() => setShowCreateWizard(true)}
-              >
-                Créer un Nouveau Marché
-              </Button>
+              editable ? (
+                <Button
+                  variant="primary"
+                  icon={FilePlus}
+                  onClick={() => setShowCreateWizard(true)}
+                >
+                  Créer un Nouveau Marché
+                </Button>
+              ) : null
             }
           />
+
+          {!editable && <ReadOnlyBanner />}
 
           {/* Summary Dashboard */}
           <div className={`${designSystem.layout.grid.cols4} ${designSystem.layout.grid.gap} mb-8`}>
@@ -225,13 +234,15 @@ const MarketManagement = () => {
           )}
 
           {/* Create Market Wizard */}
-          <CreateMarketWizard
-            isOpen={showCreateWizard}
-            onClose={() => setShowCreateWizard(false)}
-            onSubmit={handleCreateMarket}
-            budgetLines={budgetLines}
-            submitting={submitting}
-          />
+          {editable && (
+            <CreateMarketWizard
+              isOpen={showCreateWizard}
+              onClose={() => setShowCreateWizard(false)}
+              onSubmit={handleCreateMarket}
+              budgetLines={budgetLines}
+              submitting={submitting}
+            />
+          )}
 
           {/* Markets Table/Cards */}
           <Card
@@ -269,15 +280,17 @@ const MarketManagement = () => {
               <EmptyState
                 icon={Building}
                 title="Aucun Marché Trouvé"
-                description="Commencez par créer votre premier contrat de marché."
+                description={editable ? 'Commencez par créer votre premier contrat de marché.' : 'Aucun marché public n\'a encore été enregistré.'}
                 action={
-                  <Button
-                    variant="primary"
-                    icon={FilePlus}
-                    onClick={() => setShowCreateWizard(true)}
-                  >
-                    Créer un Nouveau Marché
-                  </Button>
+                  editable ? (
+                    <Button
+                      variant="primary"
+                      icon={FilePlus}
+                      onClick={() => setShowCreateWizard(true)}
+                    >
+                      Créer un Nouveau Marché
+                    </Button>
+                  ) : null
                 }
               />
             ) : viewMode === 'cards' ? (
@@ -295,6 +308,7 @@ const MarketManagement = () => {
                         market={market}
                         linkedBudget={linkedBudget}
                         onSign={handleSignMarket}
+                        canEdit={editable}
                       />
                     );
                   })}
@@ -385,7 +399,7 @@ const MarketManagement = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center space-x-2">
-                              {market.status === 'DRAFT' && (
+                              {editable && market.status === 'DRAFT' && (
                                 <Button
                                   variant="success"
                                   size="sm"

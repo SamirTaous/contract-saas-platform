@@ -4,6 +4,7 @@ import com.samir.auth.activity.ActivityLoggingFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -49,7 +50,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/me").authenticated()
 
                         // List all users / specific user
-                        .requestMatchers("/api/users/all").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                         // List my organization ( admins only )
                         .requestMatchers("/api/organizations/me").hasAnyRole("ADMIN","SUPER_ADMIN")

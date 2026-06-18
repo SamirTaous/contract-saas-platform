@@ -2,16 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Mail, Shield } from 'lucide-react';
 import api from '../api';
+import { useAuth } from '../contexts/AuthContext';
+import { canEdit } from '../utils/roles';
 import { designSystem } from '../styles/designSystem';
 import PageHeader from './ui/PageHeader';
 import Card from './ui/Card';
 import EmptyState from './ui/EmptyState';
 
 const UserList = () => {
+    const { user: authUser } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
+    const editable = canEdit(user || authUser);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -57,7 +61,7 @@ const UserList = () => {
                 <div className={designSystem.layout.section}>
                     <PageHeader
                         title="Membres de l'Équipe"
-                        subtitle="Gérer les membres de votre organisation et leurs rôles."
+                        subtitle={editable ? 'Gérer les membres de votre organisation et leurs rôles.' : 'Consulter les membres de votre organisation.'}
                         icon={Users}
                     />
 

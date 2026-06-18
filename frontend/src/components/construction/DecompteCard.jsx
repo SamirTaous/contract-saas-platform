@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
 import { formatCurrency } from '../../utils/currency';
 
-const DecompteCard = ({ decompte, onPay, showProject = true }) => {
+const DecompteCard = ({ decompte, onPay, showProject = true, canEdit = true }) => {
   const navigate = useNavigate();
   const getStatusIcon = (status) => {
     switch (status) {
@@ -101,15 +101,17 @@ const DecompteCard = ({ decompte, onPay, showProject = true }) => {
         <div className="mt-4 pt-4 border-t border-gray-100">
           {decompte.status === 'PENDING' && (
             <div className="flex space-x-2">
-              <Button
-                variant="success"
-                size="sm"
-                icon={CheckCircle}
-                onClick={() => onPay(decompte.uuid)}
-                className="flex-1"
-              >
-                Valider et Payer
-              </Button>
+              {canEdit && (
+                <Button
+                  variant="success"
+                  size="sm"
+                  icon={CheckCircle}
+                  onClick={() => onPay(decompte.uuid)}
+                  className="flex-1"
+                >
+                  Valider et Payer
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
