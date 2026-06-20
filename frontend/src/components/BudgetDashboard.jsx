@@ -31,6 +31,7 @@ import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
 import { useSidebar } from '../contexts/SidebarContext';
 import BudgetComparison from './BudgetComparison';
+import BudgetAIRecommendations from './BudgetAIRecommendations';
 
 // Register Chart.js components
 ChartJS.register(
@@ -449,6 +450,9 @@ const BudgetDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* AI Recommendations Section */}
+        <BudgetAIRecommendations className="mb-8" />
 
         {/* Top Budget Lines */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">

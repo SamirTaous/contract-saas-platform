@@ -1,6 +1,7 @@
 package com.samir.ops.service;
 
 import com.samir.ops.dto.AiResponse;
+import com.samir.ops.dto.UserContext;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.repository.BudgetRepository;
 import lombok.RequiredArgsConstructor;
@@ -118,5 +119,70 @@ public class AiService {
         }
 
         return new AiResponse(recommendations.toString(), "ALGORITHMIC_FALLBACK");
+    }
+
+    public AiResponse getSingleBudgetRecommendations(UUID lineUuid, UserContext user) {
+        // 1. Find the budget line
+        BudgetLine line = budgetRepository.findBudgetLineByUuid(lineUuid)
+                .orElseThrow(() -> new RuntimeException("Budget line not found"));
+
+        // 2. Security Check: Multi-tenancy
+        if (!line.getOrganizationId().equals(user.getOrgId())) {
+            throw new RuntimeException("Unauthorized access to this budget line.");
+        }
+
+        // 3. Try Gemini AI
+        if (geminiApiKey != null && !geminiApiKey.isBlank()) {
+            try {
+                String prompt = buildSingleLinePrompt(line);
+                String aiText = callGeminiApi(prompt);
+                return new AiResponse(aiText, "GEMINI_AI_SINGLE");
+            } catch (Exception e) {
+                log.error("Single line AI analysis failed, falling back to algorithm: {}", e.getMessage());
+            }
+        } else {
+            log.warn("Gemini API key not configured. Using rule-based fallback for single line.");
+        }
+
+        // 4. Fallback: Rule-based analysis for one line
+        return generateSingleLineFallback(line);
+    }
+    private String buildSingleLinePrompt(BudgetLine line) {
+        return String.format(
+                "Act as a public finance auditor. Analyze this single budget line: Code %s. " +
+                        "Initial Budget: %s DH, Committed (Engagé): %s DH, Spent (Payé): %s DH. " +
+                        "Provide a brief 1-sentence diagnostic and 1 short recommendation in French. Keep it under 50 words.",
+                line.getFullCode(), line.getInitialAmount(), line.getCommittedAmount(), line.getSpentAmount()
+        );
+    }
+
+    private AiResponse generateSingleLineFallback(BudgetLine line) {
+        BigDecimal initial = line.getInitialAmount();
+        BigDecimal committed = line.getCommittedAmount();
+        BigDecimal spent = line.getSpentAmount();
+
+        // Safety check for empty lines
+        if (initial.compareTo(BigDecimal.ZERO) == 0) {
+            return new AiResponse("Ligne inactive. Aucun budget alloué pour cet exercice.", "ALGORITHMIC_FALLBACK");
+        }
+
+        // Calculate percentages
+        double committedRate = committed.multiply(BigDecimal.valueOf(100))
+                .divide(initial, 2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        double spentRate = spent.multiply(BigDecimal.valueOf(100))
+                .divide(initial, 2, BigDecimal.ROUND_HALF_UP).doubleValue();
+
+        String analysis;
+        if (committedRate >= 90.0) {
+            analysis = String.format("⚠️ **Alerte Saturation (%.1f%% Engagé)** : La ligne est presque saturée. Bloquez immédiatement les nouveaux marchés sur ce code.", committedRate);
+        } else if (committedRate < 20.0) {
+            analysis = String.format("📈 **Sous-consommation (%.1f%% Engagé)** : Le taux d'engagement est très bas. Accélérez le lancement des appels d'offres programmés.", committedRate);
+        } else if (spentRate < (committedRate * 0.3)) {
+            analysis = String.format("⏳ **Retard de Paiement (%.1f%% Consommé)** : L'argent est engagé mais les chantiers physique n'avancent pas. Relancez le service construction.", spentRate);
+        } else {
+            analysis = "**Situation Normale** : Le rythme d'engagement et de paiement sur cette ligne est conforme aux prévisions d'exécution.";
+        }
+
+        return new AiResponse(analysis, "ALGORITHMIC_FALLBACK_SINGLE");
     }
 }

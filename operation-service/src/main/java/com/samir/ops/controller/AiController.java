@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
@@ -20,5 +22,15 @@ public class AiController {
     public ResponseEntity<AiResponse> getRecommendations(@RequestHeader("Authorization") String token) {
         UserContext user = jwtUtils.getUserContext(token);
         return ResponseEntity.ok(aiService.getBudgetRecommendations(user.getOrgId()));
+    }
+
+    @GetMapping("/recommendations/budget/{uuid}")
+    public ResponseEntity<AiResponse> getSingleLineRecommendations(
+            @PathVariable UUID uuid,
+            @RequestHeader("Authorization") String token) {
+
+        UserContext user = jwtUtils.getUserContext(token);
+        AiResponse response = aiService.getSingleBudgetRecommendations(uuid, user);
+        return ResponseEntity.ok(response);
     }
 }

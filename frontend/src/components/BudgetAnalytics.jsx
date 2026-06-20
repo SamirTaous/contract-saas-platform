@@ -11,6 +11,7 @@ import {
   PieChart,
   Activity
 } from 'lucide-react';
+import BudgetLineAIRecommendations from './BudgetLineAIRecommendations';
 
 const BudgetAnalytics = ({ budgetLine, className = '' }) => {
   const [metrics, setMetrics] = useState({});
@@ -317,6 +318,14 @@ const BudgetAnalytics = ({ budgetLine, className = '' }) => {
           </div>
         </div>
       </div>
+
+      {/* AI Recommendations for Single Budget Line */}
+      {budgetLine?.uuid && (
+        <BudgetLineAIRecommendations 
+          budgetLineUuid={budgetLine.uuid} 
+          budgetLine={budgetLine}
+        />
+      )}
 
       {/* Recommendations */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
