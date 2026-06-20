@@ -107,17 +107,21 @@ En l'absence de connexion au service d'IA, voici quelques bonnes pratiques g√©n√
     // Parse the text to extract structured recommendations
     const lines = text.split('\n').filter(l => l.trim());
     const recommendations = [];
-    let currentSection = null;
 
     lines.forEach(line => {
       const trimmed = line.trim();
       
-      // Skip headers (### or **)
-      if (trimmed.startsWith('###') || (trimmed.startsWith('**') && trimmed.endsWith('**'))) {
+      // Skip headers starting with ### but keep processing
+      if (trimmed.startsWith('###')) {
         return;
       }
 
-      // Bullet points with bold labels
+      // Skip standalone bold headers but keep processing
+      if (trimmed.match(/^\*\*[^*]+\*\*$/) && !trimmed.includes(':')) {
+        return;
+      }
+
+      // Bullet points with bold labels (e.g., "- **Label**: Description")
       if (trimmed.startsWith('-')) {
         const content = trimmed.replace(/^-\s*/, '');
         
@@ -131,19 +135,33 @@ En l'absence de connexion au service d'IA, voici quelques bonnes pratiques g√©n√
             priority: getPriorityFromLabel(boldMatch[1])
           });
         } else {
-          // Simple bullet point
+          // Simple bullet point without bold formatting - treat as medium priority
+          const cleanContent = content.replace(/\*\*/g, '');
           recommendations.push({
-            type: 'note',
-            content: content.replace(/\*\*/g, '')
+            type: 'recommendation',
+            label: 'Information',
+            description: cleanContent,
+            priority: 'low'
           });
         }
       }
-      // Italic notes
+      // Italic notes (e.g., "*Note: ...")
       else if (trimmed.startsWith('*') && !trimmed.startsWith('**')) {
         recommendations.push({
           type: 'info',
           content: trimmed.replace(/\*/g, '')
         });
+      }
+      // Regular text that's not a header - treat as note
+      else if (trimmed && !trimmed.startsWith('#')) {
+        // Check if it contains bold text
+        if (trimmed.includes('**')) {
+          const cleanText = trimmed.replace(/\*\*/g, '');
+          recommendations.push({
+            type: 'note',
+            content: cleanText
+          });
+        }
       }
     });
 
