@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Brain, Sparkles, TrendingUp, AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Brain, Sparkles, TrendingUp, AlertCircle, CheckCircle, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 import { setupApiInterceptors } from '../utils/apiInterceptors';
 
@@ -127,81 +127,133 @@ const BudgetLineAIRecommendations = ({ budgetLineUuid, budgetLine, className = '
     }
   };
 
-  const formatRecommendationText = (text) => {
+  const parseAndFormatRecommendations = (text) => {
     if (!text) return null;
 
-    // Split by double newlines to get paragraphs
-    const paragraphs = text.split('\n\n').filter(p => p.trim());
+    // Parse the text to extract structured recommendations
+    const lines = text.split('\n').filter(l => l.trim());
+    const recommendations = [];
 
-    return paragraphs.map((paragraph, pIndex) => {
-      // Check if this is a header (starts with ###)
-      if (paragraph.startsWith('###')) {
-        return (
-          <h4 key={pIndex} className="text-lg font-bold text-gray-900 mb-3">
-            {paragraph.replace(/^###\s*/, '')}
-          </h4>
-        );
-      }
-
-      // Check if this is a header (starts with **)
-      if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-        return (
-          <h5 key={pIndex} className="text-md font-semibold text-gray-800 mb-2">
-            {paragraph.replace(/\*\*/g, '')}
-          </h5>
-        );
-      }
-
-      // Split by newlines to handle bullet points
-      const lines = paragraph.split('\n').filter(l => l.trim());
+    lines.forEach(line => {
+      const trimmed = line.trim();
       
+      // Skip headers (### or **)
+      if (trimmed.startsWith('###') || (trimmed.startsWith('**') && trimmed.endsWith('**'))) {
+        return;
+      }
+
+      // Bullet points with bold labels
+      if (trimmed.startsWith('-')) {
+        const content = trimmed.replace(/^-\s*/, '');
+        
+        // Extract bold text (label) and description
+        const boldMatch = content.match(/^\*\*(.+?)\*\*:\s*(.+)$/);
+        if (boldMatch) {
+          recommendations.push({
+            type: 'recommendation',
+            label: boldMatch[1],
+            description: boldMatch[2],
+            priority: getPriorityFromLabel(boldMatch[1])
+          });
+        } else {
+          // Simple bullet point
+          recommendations.push({
+            type: 'note',
+            content: content.replace(/\*\*/g, '')
+          });
+        }
+      }
+      // Italic notes
+      else if (trimmed.startsWith('*') && !trimmed.startsWith('**')) {
+        recommendations.push({
+          type: 'info',
+          content: trimmed.replace(/\*/g, '')
+        });
+      }
+    });
+
+    return recommendations;
+  };
+
+  const getPriorityFromLabel = (label) => {
+    const lowerLabel = label.toLowerCase();
+    if (lowerLabel.includes('alerte') || lowerLabel.includes('critique') || lowerLabel.includes('immédiat')) {
+      return 'high';
+    } else if (lowerLabel.includes('attention') || lowerLabel.includes('surveillance') || lowerLabel.includes('planification')) {
+      return 'medium';
+    }
+    return 'low';
+  };
+
+  const getRecommendationIcon = (priority) => {
+    switch (priority) {
+      case 'high':
+        return <AlertTriangle className="h-5 w-5 text-red-600" />;
+      case 'medium':
+        return <AlertCircle className="h-5 w-5 text-yellow-600" />;
+      default:
+        return <CheckCircle className="h-5 w-5 text-green-600" />;
+    }
+  };
+
+  const getRecommendationStyle = (priority) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-50 border-red-200 hover:bg-red-100';
+      case 'medium':
+        return 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100';
+      default:
+        return 'bg-green-50 border-green-200 hover:bg-green-100';
+    }
+  };
+
+  const renderRecommendations = (recommendations) => {
+    if (!recommendations || recommendations.length === 0) {
       return (
-        <div key={pIndex} className="mb-4">
-          {lines.map((line, lIndex) => {
-            // Bullet point
-            if (line.trim().startsWith('-')) {
-              const cleanLine = line.replace(/^-\s*/, '');
-              // Parse bold text (**text**)
-              const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
-              
-              return (
-                <div key={lIndex} className="flex items-start space-x-3 mb-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
-                  <p className="text-sm text-gray-700 flex-1">
-                    {parts.map((part, i) => {
-                      if (part.startsWith('**') && part.endsWith('**')) {
-                        return (
-                          <span key={i} className="font-semibold text-gray-900">
-                            {part.replace(/\*\*/g, '')}
-                          </span>
-                        );
-                      }
-                      return <span key={i}>{part}</span>;
-                    })}
-                  </p>
-                </div>
-              );
-            }
-
-            // Italic text (*text*)
-            if (line.trim().startsWith('*') && !line.trim().startsWith('**')) {
-              return (
-                <p key={lIndex} className="text-sm text-gray-600 italic mt-2">
-                  {line.replace(/\*/g, '')}
-                </p>
-              );
-            }
-
-            // Regular paragraph
-            return (
-              <p key={lIndex} className="text-sm text-gray-700 mb-2">
-                {line}
-              </p>
-            );
-          })}
+        <div className="text-center py-8 text-gray-500">
+          <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-3" />
+          <p className="text-sm">Aucune recommandation spécifique pour cette ligne.</p>
+          <p className="text-xs mt-1">La situation de cette ligne budgétaire est stable.</p>
         </div>
       );
-    });
+    }
+
+    return (
+      <div className="space-y-3">
+        {recommendations.map((rec, index) => {
+          if (rec.type === 'recommendation') {
+            return (
+              <div
+                key={index}
+                className={`flex items-start space-x-4 p-4 rounded-lg border transition-all ${getRecommendationStyle(rec.priority)}`}
+              >
+                <div className="flex-shrink-0 mt-0.5">
+                  {getRecommendationIcon(rec.priority)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h5 className="font-semibold text-gray-900 mb-1">{rec.label}</h5>
+                  <p className="text-sm text-gray-700">{rec.description}</p>
+                </div>
+              </div>
+            );
+          } else if (rec.type === 'note') {
+            return (
+              <div key={index} className="flex items-start space-x-3 px-4 py-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 flex-shrink-0"></div>
+                <p className="text-sm text-gray-700">{rec.content}</p>
+              </div>
+            );
+          } else if (rec.type === 'info') {
+            return (
+              <div key={index} className="px-4 py-2">
+                <p className="text-xs text-gray-600 italic">{rec.content}</p>
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    );
   };
 
   if (loading) {
@@ -225,11 +277,14 @@ const BudgetLineAIRecommendations = ({ budgetLineUuid, budgetLine, className = '
 
   return (
     <div className={`bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg shadow-sm border border-indigo-200 p-6 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-          <Brain className="h-5 w-5 text-indigo-600" />
-          <span>Recommandations IA pour cette Ligne</span>
-        </h3>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+            <Brain className="h-5 w-5 text-indigo-600" />
+            <span>Assistant IA - Ligne Budgétaire</span>
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">Recommandations personnalisées pour cette ligne</p>
+        </div>
         
         {aiResponse && (
           <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border ${getEngineBadgeColor(aiResponse.engine)}`}>
@@ -240,6 +295,30 @@ const BudgetLineAIRecommendations = ({ budgetLineUuid, budgetLine, className = '
           </div>
         )}
       </div>
+
+      {budgetLine && (
+        <div className="mb-4 bg-white rounded-lg border border-indigo-200 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Ligne budgétaire analysée</p>
+              <p className="font-semibold text-gray-900">{budgetLine.fullCode}</p>
+              {budgetLine.label && (
+                <p className="text-sm text-gray-600 mt-1">{budgetLine.label}</p>
+              )}
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Taux d'utilisation</p>
+              <p className={`text-2xl font-bold ${
+                (budgetLine.committedAmount / budgetLine.initialAmount * 100) > 90 ? 'text-red-600' :
+                (budgetLine.committedAmount / budgetLine.initialAmount * 100) > 75 ? 'text-yellow-600' :
+                'text-green-600'
+              }`}>
+                {((budgetLine.committedAmount / budgetLine.initialAmount) * 100).toFixed(1)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && !aiResponse && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
@@ -254,12 +333,10 @@ const BudgetLineAIRecommendations = ({ budgetLineUuid, budgetLine, className = '
       )}
 
       {aiResponse && (
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <div className="prose prose-sm max-w-none">
-            {formatRecommendationText(aiResponse.text)}
-          </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+          {renderRecommendations(parseAndFormatRecommendations(aiResponse.text))}
 
-          <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="mt-5 pt-4 border-t border-gray-200 flex items-center justify-between">
             <button
               onClick={fetchAIRecommendations}
               className="flex items-center space-x-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
@@ -268,11 +345,9 @@ const BudgetLineAIRecommendations = ({ budgetLineUuid, budgetLine, className = '
               <span>Rafraîchir l'analyse</span>
             </button>
             
-            {budgetLine && (
-              <div className="text-xs text-gray-500">
-                Ligne: <span className="font-medium text-gray-700">{budgetLine.fullCode}</span>
-              </div>
-            )}
+            <div className="text-xs text-gray-500">
+              Dernière mise à jour: <span className="font-medium text-gray-700">maintenant</span>
+            </div>
           </div>
         </div>
       )}
