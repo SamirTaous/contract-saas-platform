@@ -118,13 +118,43 @@ public class BudgetService {
     }
 
     /**
-     * Logic for fetching budgets based on user role.
+     * Logic for fetching budgets based on user role and optional year filter.
      */
-    public List<BudgetLine> getAllBudgets(UserContext user) {
+    public List<BudgetLine> getAllBudgets(UserContext user, Integer year) {
+        List<BudgetLine> budgets;
+        
         if ("SUPER_ADMIN".equals(user.getRole())) {
-            return budgetRepository.findAll();
+            if (year != null) {
+                budgets = budgetRepository.findByFiscalYear(year);
+            } else {
+                budgets = budgetRepository.findAll();
+            }
+        } else {
+            if (year != null) {
+                budgets = budgetRepository.findByOrganizationIdAndFiscalYear(user.getOrgId(), year);
+            } else {
+                budgets = budgetRepository.findBudgetLinesByOrganizationId(user.getOrgId());
+            }
         }
-        return budgetRepository.findBudgetLinesByOrganizationId(user.getOrgId());
+        
+        return budgets;
+    }
+    
+    /**
+     * Get list of available fiscal years for the user's organization.
+     */
+    public List<Integer> getAvailableYears(UserContext user) {
+        List<Integer> years;
+        
+        if ("SUPER_ADMIN".equals(user.getRole())) {
+            years = budgetRepository.findDistinctFiscalYears();
+        } else {
+            years = budgetRepository.findDistinctFiscalYearsByOrganizationId(user.getOrgId());
+        }
+        
+        // Sort in descending order (most recent first)
+        years.sort((a, b) -> b.compareTo(a));
+        return years;
     }
 
     /**

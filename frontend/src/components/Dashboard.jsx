@@ -66,8 +66,13 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch budget data
-      const budgetResponse = await budgetApi.get('/all');
+      // Get current year for budget data
+      const currentYear = new Date().getFullYear();
+
+      // Fetch budget data for current year only
+      const budgetResponse = await budgetApi.get('/all', {
+        params: { year: currentYear }
+      });
       const budgetLines = budgetResponse.data;
 
       // Calculate budget statistics

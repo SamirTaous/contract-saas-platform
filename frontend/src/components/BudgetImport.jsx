@@ -108,7 +108,7 @@ const BudgetImport = ({ onImportSuccess }) => {
             // Call the success callback if provided
             if (onImportSuccess) {
                 setTimeout(() => {
-                    onImportSuccess();
+                    onImportSuccess(yearValue); // Pass the year to refresh available years
                 }, 1500); // Give user time to see the success message
             }
 

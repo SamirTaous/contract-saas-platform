@@ -27,6 +27,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { canEdit } from '../utils/roles';
 import ReadOnlyBanner from './ui/ReadOnlyBanner';
 import BudgetImport from './BudgetImport';
+import BudgetYearComparison from './BudgetYearComparison';
 
 const budgetApi = setupApiInterceptors(axios.create({
   baseURL: 'http://localhost:8082/api/budget'
@@ -47,16 +48,66 @@ const BudgetTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showImportModal, setShowImportModal] = useState(false);
+  
+  // Year filtering state
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState([]);
+  const [showComparison, setShowComparison] = useState(false);
 
   useEffect(() => {
-    fetchBudgetLines();
+    fetchAvailableYears();
   }, []);
+
+  useEffect(() => {
+    if (availableYears.length > 0 && !showComparison) {
+      fetchBudgetLines();
+    }
+  }, [selectedYear, availableYears]);
+
+  const fetchAvailableYears = async () => {
+    try {
+      const response = await budgetApi.get('/years');
+      const years = response.data;
+      
+      if (years && years.length > 0) {
+        setAvailableYears(years);
+        
+        // Set current year as default if available, otherwise use the most recent
+        const currentYear = new Date().getFullYear();
+        if (years.includes(currentYear)) {
+          setSelectedYear(currentYear);
+        } else {
+          setSelectedYear(years[0]); // Most recent year
+        }
+      } else {
+        // If no years returned, use current year and fetch all data
+        const currentYear = new Date().getFullYear();
+        setAvailableYears([currentYear]);
+        setSelectedYear(currentYear);
+        fetchBudgetLines(); // Fetch without year filter
+      }
+    } catch (err) {
+      console.error('Failed to fetch available years:', err);
+      // Fallback to current year and fetch all data
+      const currentYear = new Date().getFullYear();
+      setAvailableYears([currentYear]);
+      setSelectedYear(currentYear);
+      fetchBudgetLines(); // Fetch without year filter
+    }
+  };
 
   const fetchBudgetLines = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await budgetApi.get('/all');
+      
+      // Build params conditionally
+      const params = {};
+      if (selectedYear) {
+        params.year = selectedYear;
+      }
+      
+      const response = await budgetApi.get('/all', { params });
       
       // Use only real data from backend - no mock data at all
       const enhancedData = response.data.map((line, index) => ({
@@ -229,17 +280,53 @@ const BudgetTable = () => {
               )}
 
               <button
-                onClick={() => navigate('/budget/analytics')}
+                onClick={() => setShowComparison(!showComparison)}
                 className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
               >
                 <TrendingUp className="h-4 w-4" />
-                <span>Analyses</span>
+                <span>{showComparison ? 'Vue Simple' : 'Comparer Années'}</span>
               </button>
             </div>
           </div>
         </div>
 
         {!editable && <ReadOnlyBanner />}
+
+        {/* Year Selector Bar */}
+        {availableYears.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm font-medium text-blue-900">Année Fiscale:</span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  {availableYears.map((year) => (
+                    <button
+                      key={year}
+                      onClick={() => setSelectedYear(year)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        selectedYear === year
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'bg-white text-gray-700 hover:bg-blue-100 border border-gray-300'
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="text-sm text-blue-800">
+                <span className="font-medium">{budgetLines.length}</span> lignes pour {selectedYear}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters and Search */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -277,6 +364,8 @@ const BudgetTable = () => {
         </div>
 
         {/* Summary Cards */}
+        {!showComparison && (
+          <>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
@@ -523,6 +612,13 @@ const BudgetTable = () => {
             </div>
           )}
         </div>
+          </>
+        )}
+        
+        {/* Multi-Year Comparison View */}
+        {showComparison && (
+          <BudgetYearComparison years={availableYears} />
+        )}
 
         {/* Import Modal */}
         {editable && showImportModal && (
@@ -544,6 +640,7 @@ const BudgetTable = () => {
                 <BudgetImport 
                   onImportSuccess={() => {
                     setShowImportModal(false);
+                    fetchAvailableYears(); // Refresh available years
                     fetchBudgetLines(); // Refresh the budget lines after successful import
                   }}
                 />

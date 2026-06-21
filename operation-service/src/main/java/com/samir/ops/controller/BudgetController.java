@@ -38,10 +38,19 @@ public class BudgetController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<BudgetLine>> getAllBudgets(@RequestHeader("Authorization") String authHeader){
+    public ResponseEntity<List<BudgetLine>> getAllBudgets(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) Integer year){
         UserContext user = jwtUtils.getUserContext(authHeader);
-        List<BudgetLine> budgets = budgetService.getAllBudgets(user);
+        List<BudgetLine> budgets = budgetService.getAllBudgets(user, year);
         return ResponseEntity.ok(budgets);
+    }
+    
+    @GetMapping("/years")
+    public ResponseEntity<List<Integer>> getAvailableYears(@RequestHeader("Authorization") String authHeader){
+        UserContext user = jwtUtils.getUserContext(authHeader);
+        List<Integer> years = budgetService.getAvailableYears(user);
+        return ResponseEntity.ok(years);
     }
 
     @GetMapping("{uuid}")

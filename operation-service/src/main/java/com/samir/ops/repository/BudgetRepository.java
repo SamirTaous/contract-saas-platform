@@ -4,6 +4,7 @@ package com.samir.ops.repository;
 import com.samir.ops.model.BudgetLine;
 import com.samir.ops.model.Type;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.Year;
@@ -21,7 +22,8 @@ public interface BudgetRepository extends JpaRepository<BudgetLine, Long> {
     List<BudgetLine> findByArticleAndOrganizationId(String article, Long organizationId);
     List<BudgetLine> findByTypeAndOrganizationId(Type type, Long orgId);
 
-    List<BudgetLine> findByOrganizationIdAndFiscalYear(Long organizationId, Year fiscalYear);
+    List<BudgetLine> findByOrganizationIdAndFiscalYear(Long organizationId, int fiscalYear);
+    List<BudgetLine> findByFiscalYear(int fiscalYear);
 
     Optional<BudgetLine> findBudgetLineByUuidAndFiscalYear(UUID uuid, Year fiscalYear);
     
@@ -32,4 +34,10 @@ public interface BudgetRepository extends JpaRepository<BudgetLine, Long> {
     List<BudgetLine> findByArticleAndParagraphAndLineAndOrganizationId(String article, String paragraph, String line, Long orgId);
 
     Optional<BudgetLine> findByFullCodeAndOrganizationIdAndFiscalYear(String fullCode, Long organizationId, int year);
+    
+    @Query("SELECT DISTINCT b.fiscalYear FROM BudgetLine b ORDER BY b.fiscalYear DESC")
+    List<Integer> findDistinctFiscalYears();
+    
+    @Query("SELECT DISTINCT b.fiscalYear FROM BudgetLine b WHERE b.organizationId = ?1 ORDER BY b.fiscalYear DESC")
+    List<Integer> findDistinctFiscalYearsByOrganizationId(Long organizationId);
 }
